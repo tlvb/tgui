@@ -1,0 +1,79 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my $HDIR = 'inc/';
+my $SDIR = 'src/';
+my $LDIR = 'lib/';
+my $CPPFLAGS = '-std=c++11 -Wall -DDEBUG -Iinc/';
+my $CPP = 'g++';
+
+my %DEPS = ();
+
+sub fixpath {
+	return (($_[0]=~/h$/)?$HDIR:$SDIR).$_[0];
+}
+
+sub getdeps($);
+sub getdeps($) {
+	my $f = $_[0];
+	unless (exists($DEPS{$f})) {
+		$DEPS{$f} = {};
+		open my $fh, '<', fixpath($f) or die "could not open $f";
+		while (my $l = <$fh>) {
+			next unless $l =~ /#include "(.*\.hh)"/;
+			my $d = $1;
+			if (exists $DEPS{$d}) {
+			}
+			else {
+				getdeps($d) unless (exists $DEPS{$d});
+			}
+			$DEPS{$f}->{$d} = 1;
+			$DEPS{$f}->{$_} = 1 for keys %{$DEPS{$d}};
+		}
+		close $fh;
+	}
+}
+
+my @hfiles = ();
+my @sfiles = ();
+my $dh;
+
+opendir $dh, $HDIR or die "could not open $HDIR";
+while (readdir $dh) {
+	next unless /\.hh$/;
+	push @hfiles, $_;
+}
+closedir $dh;
+opendir $dh, $SDIR or die "could not open $SDIR";
+while (readdir $dh) {
+	next unless /\.cc$/;
+	push @sfiles, $_;
+}
+closedir $dh;
+
+my $ofiles = join(' ', map {s/cc$/o/r} @sfiles);
+
+getdeps $_ for (@hfiles);
+getdeps $_ for (@sfiles);
+
+open my $fh, '>', 'Makefile' or die "could not open Makefile\n$!";
+
+print $fh 'CPPFLAGS = ' . $CPPFLAGS . "\n";
+print $fh 'CPP = ' . $CPP . "\n";
+print $fh 'VPATH = ' . $SDIR . ':' . $HDIR . ':' . $LDIR . "\n";
+print $fh "\n";
+
+print $fh 'libtgui.a: ' . $ofiles . "\n";
+print $fh "\t" . 'ar -Prc ' . $LDIR . 'libtgui.a ' . $ofiles . "\n" ;
+print $fh "\n";
+
+for my $sf (@sfiles) {
+	my $of = ($sf =~ s/cc$/o/r);
+	print $fh $of . ': ' . $sf . ' ' . join(' ', keys %{$DEPS{$sf}}) . "\n";
+	print $fh "\t" . '${CPP} ${CPPFLAGS} -c ' . fixpath($sf) . "\n";
+	print $fh "\n";
+}
+
+close $fh;
