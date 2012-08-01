@@ -7,7 +7,6 @@ namespace tGui {
 
 	class VContainer : public MContainer, public ThemableWidget {
 		protected:
-			std::vector<SDL_Rect> compartments;
 			int hp, vp, vs;
 		public:
 			VContainer(int hpadding=5, int vpadding=5, int vspacing=3);
