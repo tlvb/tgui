@@ -8,5 +8,6 @@
 #include "vcontainer.hh"
 #include "hcontainer.hh"
 #include "themablewidget.hh"
+#include "font.hh"
 
 #endif
