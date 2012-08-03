@@ -88,7 +88,6 @@ namespace tgui {
 		shape.ix.min[pri] = 0;
 		shape.ix.max[pri] = 0;
 
-		int i = 0;
 		for (cit = children.begin(); cit<children.end(); ++cit) {
 			cit->shp = cit->w->get_preferred_shape();
 			d("child has minimum requirements of "<<cit->shp->nm.minw<<"x"<<cit->shp->nm.minh);
@@ -100,7 +99,6 @@ namespace tgui {
 				shape.ix.min[sec] = cit->shp->ix.min[sec];
 			shape.ix.min[pri] += cit->shp->ix.min[pri];
 			d("yielding child space requirements of "<<shape.nm.minw<<"x"<<shape.nm.minh);
-			++i;
 		}
 
 		shape.ix.min[sec] += 2*pad[sec];
@@ -125,7 +123,7 @@ namespace tgui {
 		// set secondary dimension size and position for children
 		//
 		for (cit = children.begin(); cit<children.end(); ++cit) {
-			dpush("setting secondaries for child #"<<i);
+			dpush("setting secondaries for child");
 			cit->bounds.ix.pos[sec] = bounds.ix.pos[sec] + pad[sec];
 			d("sec pos is "<<cit->bounds.ix.pos[sec]);
 			if ((cit->shp->ix.max[sec] == 0) || (cit->bounds.ix.sz[sec] > availsec)) {
@@ -135,12 +133,12 @@ namespace tgui {
 			else {
 				d("want("<<cit->shp->ix.max[sec]<<") < avail("<<availsec<<") - set to wanted");
 				if (cit->shp->ix.grav[sec] == 1) {
-					d("child is centered, adding half of extra space to x: "<<(cit->bounds.ix.sz[sec]-availsec)/2);
-					cit->bounds.ix.pos[sec] += (cit->bounds.ix.sz[sec] - availsec)/2;
+					d("child is centered, adding half of extra space to x: "<<(availsec-cit->bounds.ix.sz[sec])/2);
+					cit->bounds.ix.pos[sec] += (availsec - cit->bounds.ix.sz[sec])/2;
 				}
 				else if (cit->shp->ix.grav[sec] == 2) {
-					d("child is right justified, adding extra space to x: "<<(cit->bounds.ix.sz[sec]-availsec));
-					cit->bounds.ix.pos[sec] += cit->bounds.ix.sz[sec] - availsec;
+					d("child is right justified, adding extra space to x: "<<(availsec-cit->bounds.ix.sz[sec]));
+					cit->bounds.ix.pos[sec] += availsec - cit->bounds.ix.sz[sec];
 				}
 			}
 			dpop();
@@ -156,7 +154,7 @@ namespace tgui {
 		// set minheight
 		for (cit=children.begin(); cit<children.end(); ++cit) {
 			cit->bounds.ix.sz[pri] = distrpri < cit->shp->ix.min[pri]? distrpri : cit->shp->ix.min[pri];
-			d("child #"<<i<<" is initially given primary dimension size "<<cit->bounds.ix.sz[pri]<<" ("<<cit->shp->ix.min[pri]<<") required")
+			d("child is initially given primary dimension size "<<cit->bounds.ix.sz[pri]<<" ("<<cit->shp->ix.min[pri]<<") required")
 			distrpri -= cit->bounds.ix.sz[pri];
 		}
 		d(distrpri<<" remains to be distributed evenly");
@@ -202,7 +200,7 @@ namespace tgui {
 		int v = bounds.ix.pos[pri] + pad[pri];
 		Uint8 last = 0;
 		for (cit=children.begin(); cit<children.end(); ++cit) {
-			dpush("placing child #"<<i<<" with "<<v<<" as starting point");
+			dpush("placing child with "<<v<<" as starting point");
 			int dv = 0;
 			if (distrpri > 0) {
 				if (last == 0 && cit->shp->ix.grav[pri] == 1) {
@@ -242,7 +240,7 @@ namespace tgui {
 				break;
 			case TGUI_MOUSEENTER:
 				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
-					handle_event((SDL_Event*)e->user.data1);
+					handle_event((SDL_Event*)e->user.data1); // recursing instead of doing a whole new select
 				}
 				break;
 			case TGUI_MOUSEEXIT:
