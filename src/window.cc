@@ -9,16 +9,18 @@ namespace tgui {
 		bounds.nm.w = c->w;
 		bounds.nm.h = c->h;
 		set_reaction_translator(this);
+		set_default_event_handler(this);
 	}
 
 
 	bool Window::translate(EventReaction r) {
-		dpush("Window::translate");
+		dpush("Window::translate r="<<r);
 		if ((r & UPDATE_SCREEN) != 0) {
 			d("FLIP");
 			SDL_Flip(canvas);
 		}
 		if ((r & QUIT) != 0) {
+			d("QUIT");
 			dpop();
 			return true;
 		}

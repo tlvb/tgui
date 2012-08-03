@@ -219,7 +219,7 @@ namespace tgui {
 			}
 			cit->bounds.ix.pos[pri] = v+dv;
 			v = cit->bounds.ix.pos[pri] + cit->bounds.ix.sz[pri] + chsp;
-			cit->w->place(&(cit->bounds.nm));
+			cit->w->place(&(cit->bounds.nm), false);
 			dpop();
 		}
 		dpop();
@@ -227,7 +227,7 @@ namespace tgui {
 
 	EventReaction MContainer::handle_event(SDL_Event *e) {
 		ChildIterator it;
-		EventReaction ret;
+		EventReaction ret = 0;
 		switch (e->type) {
 			case SDL_MOUSEMOTION:
 				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
@@ -238,6 +238,16 @@ namespace tgui {
 			case SDL_MOUSEBUTTONUP:
 				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
 					ret |= apply_mouseevent_to_child(&(*it), e->button.x, e->button.y, e);
+				}
+				break;
+			case TGUI_MOUSEENTER:
+				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
+					handle_event((SDL_Event*)e->user.data1);
+				}
+				break;
+			case TGUI_MOUSEEXIT:
+				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
+					ret |= it->w->handle_event(e);
 				}
 				break;
 		}

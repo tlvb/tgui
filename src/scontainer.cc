@@ -84,19 +84,24 @@ namespace tgui {
 	}
 
 	EventReaction SContainer::handle_event(SDL_Event *e) {
+		dpush("Scontainer::handle_event()");
 		if (child.w != NULL) {
 			switch (e->type) {
 				case SDL_MOUSEMOTION:
+					dpop();
 					return apply_mouseevent_to_child(&child, e->motion.x, e->motion.y, e);
 					break;
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
+					dpop();
 					return apply_mouseevent_to_child(&child, e->button.x, e->button.y, e);
 					break;
 				default:
+					dpop();
 					return child.w->handle_event(e);
 			}
 		}
+		dpop();
 		return 0;
 	}
 

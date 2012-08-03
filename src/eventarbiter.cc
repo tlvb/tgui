@@ -25,11 +25,13 @@ namespace tgui{
 	}
 
 	void EventArbiter::set_default_event_handler(EventConsumer *ec) {
+		d("EventArbiter::set_default_event_handler() EC");
 		default_handler.id = 2; // internal use only, not correlated to the grab map
 		default_handler.consumer.ec = ec;
 	}
 
 	void EventArbiter::set_default_event_handler(SDL_keysym s, EventReaction (*func)(SDL_Event*, void*), void* data) {
+		d("EventArbiter::set_default_event_handler() F");
 		default_handler.id = 3; // ditto
 		default_handler.func.f = func;
 	}
@@ -179,14 +181,17 @@ namespace tgui{
 				case SDL_MOUSEMOTION:
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP: {
+					d("something mousey happened");
 					if (exclusivemouse.id > 0) {
+						d("exclusive lock")
 						reaction |= call_grab_callback(exclusivemouse, &e);
+						handled = true;
 					}
-					handled = true;
 					break;
 				}
 			}
 			if (!handled && default_handler.id > 1) {
+				d("not handled, colling default handler");
 				reaction = call_grab_callback(default_handler, &e);
 				handled = true;
 			}

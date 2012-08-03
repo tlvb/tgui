@@ -12,8 +12,8 @@ namespace tgui {
 	// container.cc
 	class Container : public Widget {
 		public:
-			const Uint8 TGUI_MOUSEENTER = SDL_USEREVENT;
-			const Uint8 TGUI_MOUSEEXIT = SDL_USEREVENT + 1;
+			static const Uint8 TGUI_MOUSEENTER = SDL_USEREVENT;
+			static const Uint8 TGUI_MOUSEEXIT = SDL_USEREVENT + 1;
 
 
 		public:
