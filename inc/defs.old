@@ -12,21 +12,6 @@ namespace tGui {
 
 	const int wFocusStates = 5;
 
-	enum HGravity {
-		LEFT, HCENTER, RIGHT
-	};
-	
-	enum VGravity {
-		TOP, VCENTER, BOTTOM
-	};
-		 
-	struct ShapeRequest {
-		Uint16 minw, minh;
-		Uint16 maxw, maxh;
-		HGravity hGrav;
-		VGravity vGrav;
-		Uint16 priority;
-	};
 
 	struct ColorTheme {
 		Uint32 foreground[wFocusStates];

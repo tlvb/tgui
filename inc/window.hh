@@ -2,24 +2,18 @@
 #define __TGUI_WINDOW_HH__
 
 #include "widget.hh"
-#include "abstractcontainers.hh"
-#include "eventarbiter.hh"
+#include "event.hh"
+#include "container.hh"
 #include <SDL/SDL.h>
 
-namespace tGui {
+namespace tgui {
 
-	class Window : public SContainer, public EventArbiter {
-
-		protected:
-			SDL_Surface *surf;
+	class Window : public SContainer, public EventArbiter, public ReactionTranslator {
 
 		public:
 			Window(SDL_Surface *surf);
-			void configure(void);
-			void draw(void);
-		protected:
-			bool react_on_reaction(int reaction);
-			int handle_event(SDL_Event *e);
+			virtual bool translate(EventReaction r);
+			virtual void configure(void);
 
 
 	};

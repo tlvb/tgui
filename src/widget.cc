@@ -1,31 +1,45 @@
 #include "widget.hh"
+#include "container.hh"
 #include "debug.hh"
 
-namespace tGui {
+namespace tgui {
 
-	const ShapeRequest *Widget::get_preferred_dimensions(void) {
-		return &prefDims;
+	Widget::Widget(void) {
+		bounds = Rect();
+		shape = Shape();
+		parent = NULL;
+		canvas = NULL;
 	}
 
-	int Widget::handle_event(SDL_Event *e) {
-		return 0;
-	}
-	
 	void Widget::set_parent(Container *pc) {
 		parent = pc;
 	}
 
-	void Widget::place(SDL_Rect *b) {
-		dpush("Widget::place");
-		bounds = *b;
-		d("("<<bounds.x<<";"<<bounds.y<<", "<<bounds.w<<"x"<<bounds.h<<")");
-		dpop();
+	void Widget::set_canvas(SDL_Surface *c) {
+		canvas = c;
 	}
 
-	void Widget::set_surface(SDL_Surface *s) {
-		dpush("Widget::set_surface()");
-		surf = s;
-		d("surface = "<<(void*)surf);
+	bool Widget::has_parent(void) const {
+		return parent != NULL;
+	}
+
+	void Widget::set_preferred_shape(Shape *sh, bool doConfigure) {
+		shape = *sh;
+		if (doConfigure && (parent != NULL)) {
+			parent->configure();
+		}
+	}
+
+	const Shape *Widget::get_preferred_shape(void) const {
+		return &shape;
+	}
+
+	void Widget::place(SDL_Rect *b, bool doDraw) {
+		dpush("Widget::place()");
+		bounds = *b;
+		if (doDraw && (canvas != NULL)) {
+			draw();
+		}
 		dpop();
 	}
 

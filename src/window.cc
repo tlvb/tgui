@@ -1,91 +1,64 @@
 #include "window.hh"
 #include "debug.hh"
 
-namespace tGui {
-	Window::Window(SDL_Surface *surf) : SContainer() {
-		this->surf = surf;
+namespace tgui {
+	Window::Window(SDL_Surface *c) : SContainer(0, 0), EventArbiter() {
+		canvas = c;
+		bounds.nm.x = 0;
+		bounds.nm.y = 0;
+		bounds.nm.w = c->w;
+		bounds.nm.h = c->h;
+		set_reaction_translator(this);
+	}
 
+
+	bool Window::translate(EventReaction r) {
+		dpush("Window::translate");
+		if ((r & UPDATE_SCREEN) != 0) {
+			d("FLIP");
+			SDL_Flip(canvas);
+		}
+		if ((r & QUIT) != 0) {
+			dpop();
+			return true;
+		}
+		dpop();
+		return false;
 	}
 
 	void Window::configure(void) {
 		dpush("Window::configure()");
-		if (child == NULL) {
+		if (child.w == NULL) {
+			d("no child");
 			dpop();
 			return;
 		}
-		const ShapeRequest *sr = child->get_preferred_dimensions();
-		SDL_Rect cb;
-		if ((sr->maxw > 0) && (sr->maxw < surf->w)) {
-			cb.w = sr->maxw;
-		}
-		else {
-			cb.w = surf->w;
-		}
-		switch (sr->hGrav) {
-			case LEFT:
-				cb.x = 0;
-				break;
-			case HCENTER:
-				cb.x = (surf->w-cb.w)/2;
-				break;
-			case RIGHT:
-				cb.x = surf->w-cb.w;
-				break;
-		}
-		if ((sr->maxh > 0) && (sr->maxh < surf->h)) {
-			cb.h = sr->maxh;
-		}
-		else {
-			cb.h = surf->h;
+		child.shp = child.w->get_preferred_shape();
 
+		int csz[2] = {canvas->w, canvas->h};
+
+		for (int i=0; i<2; ++i) {
+			if ((child.shp->ix.max[i] > 0) && (child.shp->ix.max[i] < csz[i])) {
+				child.bounds.ix.sz[i] = child.shp->ix.max[i];
+				switch (child.shp->ix.grav[i]) {
+					case 0:
+						child.bounds.ix.pos[i] = 0;
+						break;
+					case 1:
+						child.bounds.ix.pos[i] = (csz[i]-child.bounds.ix.sz[i])/2;
+						break;
+					case 2:
+						child.bounds.ix.pos[i] = csz[i]-child.bounds.ix.sz[i];
+						break;
+				}
+			}
+			else {
+				child.bounds.ix.sz[i] = csz[i];
+			}
 		}
-		switch (sr->vGrav) {
-			case TOP:
-				cb.y = 0;
-				break;
-			case VCENTER:
-				cb.y = (surf->h-cb.h)/2;
-				break;
-			case BOTTOM:
-				cb.y = surf->h-cb.h;
-				break;
-		}
-		child->set_surface(surf);
-		child->place(&cb);
+		child.w->place(&child.bounds.nm, false);
 		dpop();
 	}
-
-	void Window::draw(void) {
-		if (child != NULL) {
-			child->draw();
-			SDL_Flip(surf);
-		}
-	}
-
-	bool Window::react_on_reaction(int reaction) {
-		if (reaction > 0) {
-			SDL_Flip(surf);
-		}
-		else if (reaction < 0) {
-			return true;
-		}
-		return false;
-	}
-
-	int Window::handle_event(SDL_Event *e) {
-		if (child != NULL) {
-			return child->handle_event(e);
-		}
-		return 0;
-	}
-
-	
-	bool Window::KeysymComparator::operator()(const SDL_keysym &a, const SDL_keysym &b) const {
-		if (a.sym != b.sym)
-			return a.sym<b.sym;
-		return a.mod<b.mod;
-	}
-
 
 
 

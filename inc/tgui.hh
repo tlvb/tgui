@@ -5,8 +5,7 @@
 #include "base.hh"
 #include "window.hh"
 #include "widget.hh"
-#include "vcontainer.hh"
-#include "hcontainer.hh"
-#include "themablewidget.hh"
+#include "container.hh"
+#include "examplewidget.hh"
 
 #endif

@@ -1,28 +1,36 @@
 #ifndef __TGUI_WIDGET_HH__
 #define __TGUI_WIDGET_HH__
+#include "event.hh"
+#include "base.hh"
 
-#include <SDL/SDL.h>
-#include "defs.hh"
-#include "abstractcontainers.hh"
+namespace tgui {
 
-namespace tGui {
+
+
+
 	class Container;
-	class Widget {
+	class Widget : public EventConsumer {
 
 		protected:
-			SDL_Rect bounds;
-			ShapeRequest prefDims;
+			Rect bounds;
+			Shape shape;
 			Container *parent;
-			SDL_Surface *surf;
+			SDL_Surface *canvas;
 
 		public:
+			Widget(void);
+			bool has_parent(void) const;
 			void set_parent(Container *pc);
-			void set_surface(SDL_Surface *s);
-			const ShapeRequest *get_preferred_dimensions(void);
-			virtual void place(SDL_Rect *b);
+			void set_canvas(SDL_Surface *c);
+			void set_preferred_shape(Shape *sh, bool doConfigure=true);
+			const Shape *get_preferred_shape(void) const;
+			virtual void place(SDL_Rect *b, bool draw=true);
 			virtual void draw(void) = 0;
-			virtual int handle_event(SDL_Event *e) = 0;
 
 	};
+
+
+
+
 }
 #endif
