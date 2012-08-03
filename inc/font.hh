@@ -3,7 +3,7 @@
 
 #include <SDL/SDL_ttf.h>
 
-namespace tGui {
+namespace tgui {
 
 	TTF_Font *load_font(const char *name, const char *style, int size);
 }

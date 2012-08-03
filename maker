@@ -77,3 +77,4 @@ for my $sf (@sfiles) {
 }
 
 close $fh;
+print "Makefile written, bye.\n";

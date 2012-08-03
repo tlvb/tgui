@@ -1,7 +1,7 @@
 #include "base.hh"
 #define abs(a) (((a)>=0)?(a):(-(a)))
 
-namespace tGui {
+namespace tgui {
 
 	void horizontal_line(SDL_Surface *s, int x0, int y, int x1, Uint32 c) {
 		if (x0 < x1) {
@@ -66,11 +66,11 @@ namespace tGui {
 		}
 	}
 
-	void empty_rect(SDL_Surface *s, int x, int y, int w, int h, Uint32 c) {
-		horizontal_line(s, x, y, x+w-1, c);
-		horizontal_line(s, x, y+h-1, x+w-1, c);
-		vertical_line(s, x, y, y+h-1, c);
-		vertical_line(s, x+w-1, y, y+h-1, c);
+	void empty_rect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {
+		horizontal_line(s, r->x, r->y, r->x+r->w-1, c);
+		horizontal_line(s, r->x, r->y+r->h-1, r->x+r->w-1, c);
+		vertical_line(s, r->x, r->y, r->y+r->h-1, c);
+		vertical_line(s, r->x+r->w-1, r->y, r->y+r->h-1, c);
 	}
 
 	void fill_rect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {

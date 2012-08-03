@@ -3,7 +3,7 @@
 
 #ifdef __LINUX__
 #include <fontconfig/fontconfig.h>
-namespace tGui {
+namespace tgui {
 	TTF_Font *load_font(const char *name, const char *style, int size) {
 		FcPattern *sp = FcPatternCreate();
 		FcPatternAddString(sp, FC_FAMILY, (FcChar8*)name);

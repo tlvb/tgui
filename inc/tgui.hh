@@ -2,12 +2,11 @@
 #define __TGUI_HH__
 
 
+#include "font.hh"
 #include "base.hh"
 #include "window.hh"
 #include "widget.hh"
-#include "vcontainer.hh"
-#include "hcontainer.hh"
-#include "themablewidget.hh"
-#include "font.hh"
+#include "container.hh"
+#include "examplewidget.hh"
 
 #endif
