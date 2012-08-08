@@ -3,12 +3,22 @@
 #include "debug.hh"
 
 namespace tgui {
+	Uint32 Widget::default_bg = 0;
+	Uint32 Widget::default_fg = 0xff;
+	TTF_Font *Widget::default_font = NULL;
+
+	void Widget::set_defaults(Uint32 bg, Uint32 fg, TTF_Font *font) {
+		default_bg = bg;
+		default_fg = fg;
+		default_font = font;
+	}
 
 	Widget::Widget(void) {
 		bounds = Rect();
 		shape = Shape();
 		parent = NULL;
 		canvas = NULL;
+		theme = NULL;
 	}
 
 	void Widget::set_parent(Container *pc) {

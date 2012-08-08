@@ -11,10 +11,6 @@ namespace tgui {
 
 	// container.cc
 	class Container : public Widget {
-		public:
-			static const Uint8 TGUI_MOUSEENTER = SDL_USEREVENT;
-			static const Uint8 TGUI_MOUSEEXIT = SDL_USEREVENT + 1;
-
 
 		public:
 			virtual void configure(void) = 0;
@@ -32,7 +28,8 @@ namespace tgui {
 			int pad[2];
 
 		public:
-			SContainer(int hpadding=3, int vpadding=3);
+			SContainer(void);
+			virtual void set_padding(int hpadding, int vpadding);
 			virtual bool attach_child(Widget* c);
 			virtual Widget *remove_child(void);
 			virtual void configure(void);
@@ -57,7 +54,8 @@ namespace tgui {
 			int chsp;
 
 		public:
-			MContainer(bool vertical, int hpadding, int vpadding, int chspacing);
+			MContainer(bool vertical);
+			virtual void set_padding(int hpadding, int vpadding, int chspacing);
 			virtual bool append_child(Widget *c, bool doConfigure = true);
 			virtual bool insert_child(Widget *c, unsigned int pos = 0, bool doConfigure = true);
 			virtual Widget *remove_child(int pos);
@@ -74,16 +72,14 @@ namespace tgui {
 
 	class HContainer : public MContainer {
 		public:
-			HContainer(int hpadding=5, int vpadding=5, int hspacing=3) :
-				MContainer(false, hpadding, vpadding, hspacing) {};
+			HContainer(void) : MContainer(false) {};
 	};
 
 
 
 	class VContainer : public MContainer {
 		public:
-			VContainer(int hpadding=5, int vpadding=5, int vspacing=3) :
-				MContainer(true, hpadding, vpadding, vspacing) {};
+			VContainer(void) : MContainer(true) {};
 	};
 
 

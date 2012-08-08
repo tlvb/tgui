@@ -1,4 +1,5 @@
 #include "base.hh"
+#include "debug.hh"
 #define abs(a) (((a)>=0)?(a):(-(a)))
 
 namespace tgui {
@@ -29,7 +30,7 @@ namespace tgui {
 		}
 	}
 
-	void bersenham_line(SDL_Surface *s, int x0, int y0, int x1, int y1, Uint32 c) {
+	void line(SDL_Surface *s, int x0, int y0, int x1, int y1, Uint32 c) {
 		if (x1-x0 == 0) {
 			vertical_line(s, x0, y0, y1, c);
 		}
@@ -67,10 +68,19 @@ namespace tgui {
 	}
 
 	void empty_rect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {
+		dpush("empty_rect");
+		d("s: "<<s->w<<"x"<<s->h);
+		d("r: "<<r->x<<";"<<r->y<<" "<<r->w<<"x"<<r->h);
+		d("c: "<<c);
 		horizontal_line(s, r->x, r->y, r->x+r->w-1, c);
+		d("1");
 		horizontal_line(s, r->x, r->y+r->h-1, r->x+r->w-1, c);
+		d("2");
 		vertical_line(s, r->x, r->y, r->y+r->h-1, c);
+		d("3");
 		vertical_line(s, r->x+r->w-1, r->y, r->y+r->h-1, c);
+		d("4");
+		dpop();
 	}
 
 	void fill_rect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {
@@ -94,7 +104,7 @@ namespace tgui {
 		horizontal_line(s, r->x, r->y+r->h-1, r->x+r->w-sr_bevel, c);
 		vertical_line(s, r->x, r->y, r->y+r->h-1, c);
 		vertical_line(s, r->x+r->w-1, r->y, r->y+r->h-sr_bevel, c);
-		bersenham_line(s, r->x+r->w-sr_bevel, r->y+r->h-1, r->x+r->w-1, r->y+r->h-sr_bevel, c);
+		line(s, r->x+r->w-sr_bevel, r->y+r->h-1, r->x+r->w-1, r->y+r->h-sr_bevel, c);
 	}
 
 	void fill_semirect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {

@@ -2,7 +2,7 @@
 #include "debug.hh"
 
 namespace tgui {
-	Window::Window(SDL_Surface *c) : SContainer(0, 0), EventArbiter() {
+	Window::Window(SDL_Surface *c) : SContainer(), EventArbiter() {
 		canvas = c;
 		bounds.nm.x = 0;
 		bounds.nm.y = 0;

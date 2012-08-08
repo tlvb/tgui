@@ -55,7 +55,7 @@ namespace tgui{
 	}
 
 	GrabID EventArbiter::grab_key(SDL_keysym s, int context, EventConsumer* h) {
-		GrabCallback gcb = {
+		KeyboardCallback gcb = {
 			.consumer = {
 				.id = gid,
 				.ec = h
@@ -69,7 +69,7 @@ namespace tgui{
 	}
 
 	GrabID EventArbiter::grab_key(SDL_keysym s, int context, EventReaction (*func)(SDL_Event*, void*), void* data) {
-		GrabCallback gcb = {
+		KeyboardCallback gcb = {
 			.func = {
 				.id = gid+1,
 				.f = func,
@@ -123,14 +123,14 @@ namespace tgui{
 		exclusivemouse.id = 0;
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, int context, GrabCallback gcb) {
+	GrabID EventArbiter::grab_key(SDL_keysym s, int context, KeyboardCallback gcb) {
 		dpush("EventArbiter::grab_key (protected)");
 		CBMapMap::iterator it = binds.find(context);
 
 		if (it != binds.end()) {
 			d("found context");
 			CBMap::iterator ret;
-			ret = it->second.insert(std::pair<SDL_keysym, GrabCallback>(s, gcb));
+			ret = it->second.insert(std::pair<SDL_keysym, KeyboardCallback>(s, gcb));
 			dpop();
 			return gcb.id;
 		}
@@ -214,7 +214,7 @@ namespace tgui{
 		return false;
 	}
 	
-	EventReaction EventArbiter::call_grab_callback(GrabCallback gcb, SDL_Event *e) {
+	EventReaction EventArbiter::call_grab_callback(KeyboardCallback gcb, SDL_Event *e) {
 		dpush("EventArbiter::call_grab_callback");
 		EventReaction reaction;
 		if((gcb.id & 1) == 0) {

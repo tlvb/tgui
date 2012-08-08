@@ -3,10 +3,18 @@
 
 namespace tgui {
 
-	SContainer::SContainer(int hpadding, int vpadding) {
+	SContainer::SContainer(void) {
+		pad[0] = 2;
+		pad[1] = 2;
+		child = ChildInfo(NULL);
+	}
+
+	void SContainer::set_padding(int hpadding, int vpadding) {
 		pad[0] = hpadding;
 		pad[1] = vpadding;
-		child = ChildInfo(NULL);
+		if (parent != NULL) {
+			parent->configure();
+		}
 	}
 
 	bool SContainer::attach_child(Widget* c) {
@@ -108,7 +116,16 @@ namespace tgui {
 	void SContainer::draw(void) {
 		dpush("SContainer::draw()");
 		if (canvas != NULL && bounds.nm.w>0 && bounds.nm.h>0) {
-			empty_rect(canvas, &bounds.nm, 0);
+			if (theme != NULL) {
+#if 0
+				fill_rect(canvas, &bounds.nm, th->nc);
+				empty_rect(canvas, &bounds.nm, th->bg);
+#endif
+			}
+			else {
+				fill_rect(canvas, &bounds.nm, default_bg);
+				empty_rect(canvas, &bounds.nm, default_fg);
+			}
 			if (child.w != NULL) {
 				child.w->draw();
 			}

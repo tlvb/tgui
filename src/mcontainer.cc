@@ -3,7 +3,10 @@
 
 namespace tgui {
 
-	MContainer::MContainer(bool vertical, int hpadding, int vpadding, int chspacing) {
+	MContainer::MContainer(bool vertical) {
+		pad[0] = 2;
+		pad[1] = 2;
+		chsp = 1;
 		if (vertical) {
 			pri = 1;
 			sec = 0;
@@ -12,9 +15,15 @@ namespace tgui {
 			pri = 0;
 			sec = 1;
 		}
+	}
+
+	void MContainer::set_padding(int hpadding, int vpadding, int chspacing) {
 		pad[0] = hpadding;
 		pad[1] = vpadding;
 		chsp = chspacing;
+		if (parent != NULL) {
+			parent->configure();
+		}
 	}
 
 	bool MContainer::append_child(Widget *c, bool doConfigure) {
@@ -238,14 +247,18 @@ namespace tgui {
 					ret |= apply_mouseevent_to_child(&(*it), e->button.x, e->button.y, e);
 				}
 				break;
-			case TGUI_MOUSEENTER:
-				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
-					handle_event((SDL_Event*)e->user.data1); // recursing instead of doing a whole new select
-				}
-				break;
-			case TGUI_MOUSEEXIT:
-				for (ChildIterator it=children.begin(); it<children.end(); ++it) {
-					ret |= it->w->handle_event(e);
+			case SDL_USEREVENT:
+				switch (e->user.code) {
+					case mouseenter:
+						for (ChildIterator it=children.begin(); it<children.end(); ++it) {
+							handle_event((SDL_Event*)e->user.data1); // recursing instead of doing a whole new select
+						}
+						break;
+					case mouseexit:
+						for (ChildIterator it=children.begin(); it<children.end(); ++it) {
+							ret |= it->w->handle_event(e);
+						}
+						break;
 				}
 				break;
 		}
@@ -261,8 +274,17 @@ namespace tgui {
 
 	void MContainer::draw() {
 		dpush("MContainer::draw()");
-		if (canvas != NULL) {
-			empty_rect(canvas, &bounds.nm, 0);
+		if (canvas != NULL && bounds.nm.w>0 && bounds.nm.h>0) {
+			if (theme != NULL) {
+#if 0				
+				fill_rect(canvas, &bounds.nm, th->nc);
+				empty_rect(canvas, &bounds.nm, th->bg);
+#endif
+			}
+			else {
+				fill_rect(canvas, &bounds.nm, default_bg);
+				empty_rect(canvas, &bounds.nm, default_fg);
+			}
 			ChildIterator cit;
 			d("drawing children");
 			for (cit = children.begin(); cit < children.end(); ++cit) {

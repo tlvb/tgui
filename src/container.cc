@@ -9,7 +9,8 @@ namespace tgui {
 			if (!ci->hasMouse) {
 				ci->hasMouse = true;
 				SDL_Event e2;
-				e2.type = TGUI_MOUSEENTER;
+				e2.type = SDL_USEREVENT;
+				e2.user.code = mouseenter;
 				e2.user.data1 = e;
 				return ci->w->handle_event(&e2);
 			}
@@ -21,7 +22,8 @@ namespace tgui {
 			if (ci->hasMouse) {
 				ci->hasMouse = false;
 				SDL_Event e2;
-				e2.type = TGUI_MOUSEEXIT;
+				e2.type = SDL_USEREVENT;
+				e2.user.code = mouseexit;
 				return ci->w->handle_event(&e2);
 			}
 		}

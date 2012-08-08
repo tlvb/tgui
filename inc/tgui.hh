@@ -8,5 +8,6 @@
 #include "widget.hh"
 #include "container.hh"
 #include "examplewidget.hh"
+#include "label.hh"
 
 #endif

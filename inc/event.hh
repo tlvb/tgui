@@ -4,24 +4,9 @@
 #include <map>
 #include <utility>
 #include <SDL/SDL.h>
+#include "base.hh"
 
 namespace tgui {
-
-	typedef unsigned int EventReaction;
-	typedef unsigned long long GrabID;
-
-	const EventReaction QUIT = 1;
-	const EventReaction UPDATE_SCREEN = 2;
-
-	class EventConsumer {
-		public:
-			virtual EventReaction handle_event(SDL_Event *e) = 0;
-	};
-
-	class ReactionTranslator {
-		public:
-			virtual bool translate(EventReaction r) = 0;
-	};
 
 
 
@@ -33,25 +18,13 @@ namespace tgui {
 
 
 		private:
-			union GrabCallback {
-				GrabID id;
-				struct {
-					GrabID id;
-					EventConsumer *ec;
-				} consumer;
-				struct {
-					GrabID id;
-					EventReaction (*f)(SDL_Event*, void*);
-					void* data;
-				} func;
-			};
 
 			class KeysymComparator {
 				public:
 					bool operator()(const SDL_keysym &a, const SDL_keysym &b) const;
 			};
 
-			typedef std::multimap<SDL_keysym, GrabCallback, KeysymComparator> CBMap;
+			typedef std::multimap<SDL_keysym, KeyboardCallback, KeysymComparator> CBMap;
 			typedef std::map<int,CBMap> CBMapMap;
 			CBMapMap binds;
 			CBMapMap::iterator curBindIter;
@@ -61,9 +34,9 @@ namespace tgui {
 			int grabContext;
 
 			ReactionTranslator *translator;
-			GrabCallback default_handler;
-			GrabCallback exclusivekeyboard;
-			GrabCallback exclusivemouse;
+			KeyboardCallback default_handler;
+			KeyboardCallback exclusivekeyboard;
+			KeyboardCallback exclusivemouse;
 
 		public:
 			EventArbiter();
@@ -93,8 +66,8 @@ namespace tgui {
 
 		protected:
 			bool update_iterators(int newContext);
-			GrabID grab_key(SDL_keysym s, int context,  GrabCallback gcb);
-			EventReaction call_grab_callback(GrabCallback gcb, SDL_Event *e);
+			GrabID grab_key(SDL_keysym s, int context,  KeyboardCallback gcb);
+			EventReaction call_grab_callback(KeyboardCallback gcb, SDL_Event *e);
 	};
 
 
