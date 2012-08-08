@@ -15,7 +15,7 @@ namespace tgui {
 		public:
 			virtual void configure(void) = 0;
 		protected:
-			EventReaction apply_mouseevent_to_child(ChildInfo *ci, int x, int y, SDL_Event *e);
+			EventReaction apply_mouseevent_to_child(ChildInfo *ci, Uint16 x, Uint16 y, Uint8 b, SDL_Event *e);
 	};
 
 
@@ -35,8 +35,8 @@ namespace tgui {
 			virtual void configure(void);
 			virtual EventReaction handle_event(SDL_Event *e);
 			virtual void draw(void);
-		protected:
 			virtual void set_canvas(SDL_Surface *c);
+			virtual void place(SDL_Rect *b, bool doDraw=true);
 	};
 
 
@@ -62,9 +62,8 @@ namespace tgui {
 			virtual void configure();
 			virtual void draw();
 			virtual EventReaction handle_event(SDL_Event *e);	
-		protected:
 			virtual void set_canvas(SDL_Surface *c);
-		private:
+			virtual void place(SDL_Rect *b, bool doDraw=true);
 	};
 
 

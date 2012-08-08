@@ -9,5 +9,6 @@
 #include "container.hh"
 #include "examplewidget.hh"
 #include "label.hh"
+#include "button.hh"
 
 #endif

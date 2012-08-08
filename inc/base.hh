@@ -5,18 +5,20 @@
 
 namespace tgui {
 
-	const Uint8 postreaction = 0;
-	const Uint8 mouseenter = 1;
-	const Uint8 mouseexit = 2;
-	const Uint8 mousepress = 3;
-	const Uint8 mouserelease = 4;
-	const Uint8 mouseclick = 5;
+	typedef Uint8 MouseAction;
+	const MouseAction postreaction = 0;
+	const MouseAction mousepress = 1;
+	const MouseAction mouserelease = 2;
+	const MouseAction mouseclick = 3;
+	const MouseAction mouseenter = 4;
+	const MouseAction mouseexit = 5;
 
-	const Uint8 left = 0;
-	const Uint8 top = 0;
-	const Uint8 center = 1;
-	const Uint8 right = 2;
-	const Uint8 bottom = 2;
+	typedef Uint8 Gravity;
+	const Gravity left = 0;
+	const Gravity top = 0;
+	const Gravity center = 1;
+	const Gravity right = 2;
+	const Gravity bottom = 2;
 
 	struct Theme {
 		int foo;
@@ -35,6 +37,11 @@ namespace tgui {
 	
 	typedef std::function<EventReaction(SDL_Event*)> EventCallback;
 	typedef std::function<bool(EventReaction)> ReactionTranslator;
+
+	struct MouseState {
+		Uint16 x, y;
+		Uint8 b;
+	};
 
 	struct KeyboardCallback {
 		GrabID id;
@@ -56,12 +63,12 @@ namespace tgui {
 		struct {
 			Uint16 minw, minh;
 			Uint16 maxw, maxh;
-			Uint8 hgrav, vgrav;
+			Gravity hgrav, vgrav;
 		} nm;
 		struct {
 			Uint16 min[2];
 			Uint16 max[2];
-			Uint8 grav[2];
+			Gravity grav[2];
 		} ix;
 	};
 

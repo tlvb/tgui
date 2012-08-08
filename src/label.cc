@@ -1,4 +1,5 @@
 #include "label.hh"
+#include "debug.hh"
 
 namespace tgui {
 
@@ -12,23 +13,30 @@ namespace tgui {
 	}
 
 	void Label::draw(void) {
-		SDL_Rect r = {
-			.x = 0,
-			.y = 0,
-			.w = bounds.nm.w,
-			.h = bounds.nm.h
-		};
-		if (theme != NULL) {
+		dpush("Label::draw()");
+		if (canvas != NULL) {
+			SDL_Rect r = {
+				.x = 0,
+				.y = 0,
+				.w = bounds.nm.w,
+				.h = bounds.nm.h
+			};
+			if (theme != NULL) {
 #if 0
-			fill_rect(canvas, &bounds.nm, th->nc);
+				fill_rect(canvas, &bounds.nm, th->nc);
 #endif
+			}
+			else {
+				fill_rect(canvas, &bounds.nm, default_bg);
+			}
+			d(bounds.nm.x<<";"<<bounds.nm.y<<" "<<bounds.nm.w<<"x"<<bounds.nm.h);
+			SDL_Rect boundscopy = bounds.nm;
+			SDL_BlitSurface(ts, &r, canvas, &boundscopy);
 		}
 		else {
-			fill_rect(canvas, &bounds.nm, default_bg);
+			d("null canvas");
 		}
-
-		SDL_Rect boundscopy = bounds.nm;
-		SDL_BlitSurface(ts, &r, canvas, &boundscopy);
+		dpop();
 	}
 
 	void Label::set_text(std::string text) {
@@ -37,6 +45,7 @@ namespace tgui {
 	}
 
 	void Label::render_text(void) {
+		dpush("Label::render_text()");
 		if (ts != NULL) {
 			SDL_FreeSurface(ts);
 		}
@@ -67,6 +76,10 @@ namespace tgui {
 		if (parent != NULL) {
 			parent->configure();
 		}
+		else {
+			d("null parent");
+		}
+		dpop();
 	}
 
 }

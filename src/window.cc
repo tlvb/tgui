@@ -16,17 +16,18 @@ namespace tgui {
 
 
 	bool Window::translate(EventReaction r) {
-		dpush("Window::translate r="<<r);
 		if ((r & UPDATE_SCREEN) != 0) {
+			dpush("Window::translate r="<<r);
 			d("FLIP");
 			SDL_Flip(canvas);
+			dpop();
 		}
 		if ((r & QUIT) != 0) {
+			dpush("Window::translate r="<<r);
 			d("QUIT");
 			dpop();
 			return true;
 		}
-		dpop();
 		return false;
 	}
 

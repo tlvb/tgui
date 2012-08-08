@@ -27,10 +27,10 @@ namespace tgui {
 			Widget(void);
 			bool has_parent(void) const;
 			void set_parent(Container *pc);
-			void set_canvas(SDL_Surface *c);
+			virtual void set_canvas(SDL_Surface *c);
 			void set_preferred_shape(Shape *sh, bool doConfigure=true);
 			const Shape *get_preferred_shape(void) const;
-			virtual void place(SDL_Rect *b, bool draw=true);
+			virtual void place(SDL_Rect *b, bool doDraw=true);
 			virtual void draw(void) = 0;
 			virtual EventReaction handle_event(SDL_Event *e) {return 0;};
 

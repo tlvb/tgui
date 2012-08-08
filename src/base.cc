@@ -68,19 +68,10 @@ namespace tgui {
 	}
 
 	void empty_rect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {
-		dpush("empty_rect");
-		d("s: "<<s->w<<"x"<<s->h);
-		d("r: "<<r->x<<";"<<r->y<<" "<<r->w<<"x"<<r->h);
-		d("c: "<<c);
 		horizontal_line(s, r->x, r->y, r->x+r->w-1, c);
-		d("1");
 		horizontal_line(s, r->x, r->y+r->h-1, r->x+r->w-1, c);
-		d("2");
 		vertical_line(s, r->x, r->y, r->y+r->h-1, c);
-		d("3");
 		vertical_line(s, r->x+r->w-1, r->y, r->y+r->h-1, c);
-		d("4");
-		dpop();
 	}
 
 	void fill_rect(SDL_Surface *s, SDL_Rect *r, Uint32 c) {

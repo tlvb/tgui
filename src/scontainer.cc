@@ -29,6 +29,9 @@ namespace tgui {
 			dpop();
 			return false;
 		}
+		if (canvas == NULL) {
+			d("null canvas");
+		}
 		child = ChildInfo(c);
 		c->set_parent(this);
 		c->set_canvas(canvas);
@@ -43,10 +46,12 @@ namespace tgui {
 	}
 
 	void SContainer::set_canvas(SDL_Surface *c) {
+		dpush("SContainer::set_canvas()");
 		canvas = c;
 		if (child.w != NULL) {
 			child.w->set_canvas(canvas);
 		}
+		dpop();
 	}
 
 	void SContainer::configure(void) {
@@ -56,60 +61,37 @@ namespace tgui {
 			dpop();
 			return;
 		}
+		child.shp = child.w->get_preferred_shape();
+		shape = *child.shp;
+		shape.nm.minw += pad[0]*2;
+		shape.nm.minh += pad[1]*2;
+		if (shape.nm.maxw != 0)
+			shape.nm.maxw += pad[0]*2;
+		if (shape.nm.maxh != 0)
+			shape.nm.maxh += pad[1]*2;
 		if (parent == NULL) {
 			d("no parent");
 			dpop();
 			return;
 		}
-		child.shp = child.w->get_preferred_shape();
-		shape = *child.shp;
 		parent->configure();
-
-		int csz[2] = {canvas->w-pad[0]*2, canvas->h-pad[1]*2};
-
-		for (int i=0; i<2; ++i) {
-			if ((child.shp->ix.max[i] > 0) && (child.shp->ix.max[i] < csz[i])) {
-				child.bounds.ix.sz[i] = child.shp->ix.max[i];
-				switch (child.shp->ix.grav[i]) {
-					case 0:
-						child.bounds.ix.pos[i] = 0;
-						break;
-					case 1:
-						child.bounds.ix.pos[i] = (csz[i]-child.bounds.ix.sz[i])/2;
-						break;
-					case 2:
-						child.bounds.ix.pos[i] = csz[i]-child.bounds.ix.sz[i];
-						break;
-				}
-				child.bounds.ix.pos[i] += pad[i];
-			}
-			else {
-				child.bounds.ix.sz[i] = csz[i];
-			}
-			child.w->place(&child.bounds.nm, false);
-			dpop();
-		}
+		dpop();
 	}
 
 	EventReaction SContainer::handle_event(SDL_Event *e) {
-		dpush("Scontainer::handle_event()");
 		if (child.w != NULL) {
 			switch (e->type) {
 				case SDL_MOUSEMOTION:
-					dpop();
-					return apply_mouseevent_to_child(&child, e->motion.x, e->motion.y, e);
+					return apply_mouseevent_to_child(&child, e->motion.x, e->motion.y, e->motion.state, e);
 					break;
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
-					dpop();
-					return apply_mouseevent_to_child(&child, e->button.x, e->button.y, e);
+					return apply_mouseevent_to_child(&child, e->button.x, e->button.y, SDL_BUTTON(e->button.button), e);
 					break;
 				default:
-					dpop();
 					return child.w->handle_event(e);
 			}
 		}
-		dpop();
 		return 0;
 	}
 
@@ -132,5 +114,49 @@ namespace tgui {
 		}
 		dpop();
 	}
+	
+	void SContainer::place(SDL_Rect *b, bool doDraw) {
+		dpush("SContainer::place()");
+		Widget::place(b, false);
+		d(bounds.nm.x<<";"<<bounds.nm.y<<" "<<bounds.nm.w<<"x"<<bounds.nm.h);
+
+		int csz[2] = {bounds.nm.w-pad[0]*2, bounds.nm.h-pad[1]*2};
+
+		for (int i=0; i<2; ++i) {
+			dpush("dimension "<<(i==0?'x':'y'));
+			d("available: "<<csz[i]);
+			if ((child.shp->ix.max[i] > 0) && (child.shp->ix.max[i] < csz[i])) {
+				child.bounds.ix.sz[i] = child.shp->ix.max[i];
+				switch (child.shp->ix.grav[i]) {
+					case 0:
+						child.bounds.ix.pos[i] = 0;
+						d("left/top "<<child.bounds.ix.pos[i]);
+						break;
+					case 1:
+						child.bounds.ix.pos[i] = (csz[i]-child.bounds.ix.sz[i])/2;
+						d("center "<<child.bounds.ix.pos[i]);
+						break;
+					case 2:
+						child.bounds.ix.pos[i] = csz[i]-child.bounds.ix.sz[i];
+						d("left/top "<<child.bounds.ix.pos[i]);
+						break;
+				}
+			}
+			else {
+				child.bounds.ix.pos[i] = 0;
+				child.bounds.ix.sz[i] = csz[i];
+				d("eternally growing "<<child.bounds.ix.sz[i]);
+			}
+			d(child.bounds.ix.pos[i]);
+			child.bounds.ix.pos[i] += bounds.ix.pos[i] + pad[i];
+			d(child.bounds.ix.pos[i] << " = " << bounds.ix.pos[i] << " + " << pad[i]);
+			dpop();
+		}
+		child.w->place(&child.bounds.nm, false);
+		if (doDraw)
+			draw();
+		dpop();
+	}
+
 
 }

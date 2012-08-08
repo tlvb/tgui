@@ -128,7 +128,7 @@ namespace tgui{
 						std::pair<CBMap::iterator,CBMap::iterator> it = curBindIter->second.equal_range(e.key.keysym);
 						bool found = (it.first != it.second);
 						if (!found) {
-							d("did not find bind, searching defaults");
+//							d("did not find bind, searching defaults");
 							it = defBindIter->second.equal_range(e.key.keysym);
 							found = (it.first != it.second);
 						}
@@ -141,8 +141,8 @@ namespace tgui{
 							handled = true;
 						}
 						else {
-							d("did not find bind");
-							d("key "<<e.key.keysym.sym<<":"<<e.key.keysym.mod<<" not grabbed");
+//							d("did not find bind");
+//							d("key "<<e.key.keysym.sym<<":"<<e.key.keysym.mod<<" not grabbed");
 						}
 					}
 					break;
@@ -150,7 +150,7 @@ namespace tgui{
 				case SDL_MOUSEMOTION:
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP: {
-					d("something mousey happened");
+//					d("something mousey happened");
 					if (exclusivemouse) {
 						d("exclusive lock")
 						reaction |= exclusivemouse(&e);
@@ -160,7 +160,7 @@ namespace tgui{
 				}
 			}
 			if (!handled && default_handler) {
-				d("not handled, colling default handler");
+//				d("not handled, calling default handler");
 				reaction = default_handler(&e);
 				handled = true;
 			}

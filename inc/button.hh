@@ -4,23 +4,48 @@
 #include <SDL/SDL.h>
 #include <utility>
 #include "container.hh"
+#include <functional>
+#include <label.hh>
+#include "base.hh"
 
 namespace tgui {
 
-	class ButtonBase : protected SContainer {
-		public:
-			Uint8 press = 0;
-			Uint8 release = 1;
-			Uint8 click = 2;
+	class ButtonBase : public SContainer {
 		protected:
-			Uint32 buttonstate;
-
+			Uint8 buttonstate;
+			Uint8 pressedhere;
+			std::function<EventReaction(Uint8)>	presscb;
+			std::function<EventReaction(Uint8)>	releasecb;
+			std::function<EventReaction(Uint8)> clickcb;
+			bool hover;
+			bool press;
 			
 		public:
-			virtual void register_callback(EventReaction (*f)(ButtonBase*, Uint8, void*),
-				Uint8 action, void* extra);
+			ButtonBase(void);
+			virtual void register_callback(std::function<EventReaction(Uint8)> cb, MouseAction action);
+			virtual void unregister_callback(MouseAction action);
 
 			virtual EventReaction handle_event(SDL_Event *e);
+	};
+
+
+	class LabelButton : public ButtonBase {
+		protected:
+			Label label;
+
+		public:
+			LabelButton(std::string text);
+			void set_text(std::string text);
+			virtual void draw(void);
+
+
+
+
+
+
+
+
+
 	};
 
 
