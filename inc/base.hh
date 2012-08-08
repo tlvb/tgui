@@ -1,14 +1,16 @@
 #ifndef __TGUI_BASE_HH__
 #define __TGUI_BASE_HH__
 #include <SDL/SDL.h>
+#include <functional>
 
 namespace tgui {
 
-	const Uint8 mouseenter = 0;
-	const Uint8 mouseexit = 1;
-	const Uint8 mousepress = 2;
-	const Uint8 mouserelease = 3;
-	const Uint8 mouseclick = 4;
+	const Uint8 postreaction = 0;
+	const Uint8 mouseenter = 1;
+	const Uint8 mouseexit = 2;
+	const Uint8 mousepress = 3;
+	const Uint8 mouserelease = 4;
+	const Uint8 mouseclick = 5;
 
 	const Uint8 left = 0;
 	const Uint8 top = 0;
@@ -28,25 +30,15 @@ namespace tgui {
 			virtual EventReaction handle_event(SDL_Event *e) = 0;
 	};
 
-	class ReactionTranslator {
-		public:
-			virtual bool translate(EventReaction r) = 0;
-	};
-
 	const EventReaction QUIT = 1;
 	const EventReaction UPDATE_SCREEN = 2;
+	
+	typedef std::function<EventReaction(SDL_Event*)> EventCallback;
+	typedef std::function<bool(EventReaction)> ReactionTranslator;
 
-	union KeyboardCallback {
+	struct KeyboardCallback {
 		GrabID id;
-		struct {
-			GrabID id;
-			EventConsumer *ec;
-		} consumer;
-		struct {
-			GrabID id;
-			EventReaction (*f)(SDL_Event*, void*);
-			void* data;
-		} func;
+		EventCallback cb;
 	};
 
 	union Rect {

@@ -33,41 +33,37 @@ namespace tgui {
 			GrabID gid;
 			int grabContext;
 
-			ReactionTranslator *translator;
-			KeyboardCallback default_handler;
-			KeyboardCallback exclusivekeyboard;
-			KeyboardCallback exclusivemouse;
+			ReactionTranslator translator;
+			EventCallback default_handler;
+			EventCallback exclusivekeyboard;
+			EventCallback exclusivemouse;
 
 		public:
+			const GrabID invalidGrabID = 0;
 			EventArbiter();
 
-			void set_reaction_translator(ReactionTranslator *t);
-			void set_default_event_handler(EventConsumer *ec);
-			void set_default_event_handler(SDL_keysym s, EventReaction (*func)(SDL_Event*, void*), void* data);
+			void set_reaction_translator(ReactionTranslator t);
+			void set_default_event_handler(EventCallback ec);
 
 			bool add_grab_context(int context);
 			bool set_grab_context(int context);
 
-			GrabID grab_key(SDL_keysym s, EventConsumer* h);
-			GrabID grab_key(SDL_keysym s, int context, EventConsumer* h);
-			GrabID grab_key(SDL_keysym s, EventReaction (*func)(SDL_Event*, void*), void* data);
-			GrabID grab_key(SDL_keysym s, int context, EventReaction (*func)(SDL_Event*, void*), void* data);
+			GrabID grab_key(SDL_keysym s, EventCallback ec);
+			GrabID grab_key(SDL_keysym s, int context, EventCallback ec);
 			bool ungrab_key(GrabID id);
 
-			void grab_keyboard_exclusive(EventConsumer *h);
-			void grab_keyboard_exclusive(EventReaction (*func)(SDL_Event*, void*), void *data);
+			void grab_keyboard_exclusive(EventCallback ec);
 			void ungrab_keyboard_exclusive(void);
 
-			void grab_mouse_exclusive(EventConsumer *h);
-			void grab_mouse_exclusive(EventReaction (*func)(SDL_Event*, void*), void *data);
+			void grab_mouse_exclusive(EventCallback ec);
 			void ungrab_mouse_exclusive(void);
 
 			void event_loop(void);
 
 		protected:
 			bool update_iterators(int newContext);
-			GrabID grab_key(SDL_keysym s, int context,  KeyboardCallback gcb);
-			EventReaction call_grab_callback(KeyboardCallback gcb, SDL_Event *e);
+			GrabID grab_key(SDL_keysym s, int context, KeyboardCallback kcb);
+//			EventReaction call_grab_callback(KeyboardCallback gcb, SDL_Event *e);
 	};
 
 

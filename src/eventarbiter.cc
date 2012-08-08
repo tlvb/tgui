@@ -7,10 +7,11 @@ namespace tgui{
 		dpush("EventArbiter::EventArbiter()");
 		add_grab_context(0);
 		set_grab_context(0);
-		default_handler.id = 0;
-		exclusivekeyboard.id = 0;
-		exclusivemouse.id = 0;
-		gid = 2;
+		translator = ReactionTranslator();
+		default_handler = EventCallback();
+		exclusivekeyboard = EventCallback();
+		exclusivemouse = EventCallback();
+		gid = invalidGrabID + 1;
 		dpop();
 	}
 
@@ -20,20 +21,13 @@ namespace tgui{
 		return a.mod<b.mod;
 	}
 
-	void EventArbiter::set_reaction_translator(ReactionTranslator *t) {
+	void EventArbiter::set_reaction_translator(ReactionTranslator t) {
 		translator = t;
 	}
 
-	void EventArbiter::set_default_event_handler(EventConsumer *ec) {
+	void EventArbiter::set_default_event_handler(EventCallback ec) {
 		d("EventArbiter::set_default_event_handler() EC");
-		default_handler.id = 2; // internal use only, not correlated to the grab map
-		default_handler.consumer.ec = ec;
-	}
-
-	void EventArbiter::set_default_event_handler(SDL_keysym s, EventReaction (*func)(SDL_Event*, void*), void* data) {
-		d("EventArbiter::set_default_event_handler() F");
-		default_handler.id = 3; // ditto
-		default_handler.func.f = func;
+		default_handler = ec;
 	}
 
 	bool EventArbiter::add_grab_context(int context) {
@@ -50,34 +44,16 @@ namespace tgui{
 		return update_iterators(context);
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, EventConsumer *h) {
-		return grab_key(s, grabContext, h);
+	GrabID EventArbiter::grab_key(SDL_keysym s, EventCallback ec) {
+		return grab_key(s, grabContext, ec);
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, int context, EventConsumer* h) {
-		KeyboardCallback gcb = {
-			.consumer = {
-				.id = gid,
-				.ec = h
-			}	
+	GrabID EventArbiter::grab_key(SDL_keysym s, int context, EventCallback ec) {
+		KeyboardCallback kcb = {
+			.id = gid++,
+			.cb = ec
 		};
-		return grab_key(s, context, gcb);
-	}
-
-	GrabID EventArbiter::grab_key(SDL_keysym s, EventReaction (*func)(SDL_Event*, void*), void* data) {
-		return grab_key(s, grabContext, func, data);
-	}
-
-	GrabID EventArbiter::grab_key(SDL_keysym s, int context, EventReaction (*func)(SDL_Event*, void*), void* data) {
-		KeyboardCallback gcb = {
-			.func = {
-				.id = gid+1,
-				.f = func,
-				.data = data
-			}
-		};
-
-		return grab_key(s, context, gcb);
+		return grab_key(s, context, kcb);
 	}
 
 	bool EventArbiter::ungrab_key(GrabID id) {
@@ -94,55 +70,48 @@ namespace tgui{
 	}
 
 
-	void EventArbiter::grab_keyboard_exclusive(EventConsumer *ec) {
-		exclusivekeyboard.id = 2; // ditto
-		exclusivekeyboard.consumer.ec = ec;
-	}
-
-	void EventArbiter::grab_keyboard_exclusive(EventReaction (*func)(SDL_Event*, void*), void* data) {
-		exclusivekeyboard.id = 3; // ditto
-		exclusivekeyboard.func.f = func;
+	void EventArbiter::grab_keyboard_exclusive(EventCallback ec) {
+		exclusivekeyboard = ec;
 	}
 
 	void EventArbiter::ungrab_keyboard_exclusive(void) {
-		exclusivekeyboard.id = 0;
+		exclusivekeyboard = EventCallback();
 	}
 
 
-	void EventArbiter::grab_mouse_exclusive(EventConsumer *ec) {
-		exclusivemouse.id = 2; // ditto
-		exclusivemouse.consumer.ec = ec;
-	}
-
-	void EventArbiter::grab_mouse_exclusive(EventReaction (*func)(SDL_Event*, void*), void* data) {
-		exclusivemouse.id = 3; // ditto
-		exclusivemouse.func.f = func;
+	void EventArbiter::grab_mouse_exclusive(EventCallback ec) {
+		exclusivemouse = ec;
 	}
 
 	void EventArbiter::ungrab_mouse_exclusive(void) {
-		exclusivemouse.id = 0;
+		exclusivemouse = EventCallback();
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, int context, KeyboardCallback gcb) {
+	GrabID EventArbiter::grab_key(SDL_keysym s, int context, KeyboardCallback kcb) {
 		dpush("EventArbiter::grab_key (protected)");
 		CBMapMap::iterator it = binds.find(context);
 
 		if (it != binds.end()) {
 			d("found context");
 			CBMap::iterator ret;
-			ret = it->second.insert(std::pair<SDL_keysym, KeyboardCallback>(s, gcb));
+			ret = it->second.insert(std::pair<SDL_keysym, KeyboardCallback>(s, kcb));
 			dpop();
-			return gcb.id;
+			return kcb.id;
 		}
 		else {
 			d("did not find context");
 			dpop();
-			return false;
+			return invalidGrabID;
 		}
 	}
 
 	void EventArbiter::event_loop(void) {
 		dpush("EventArbiter::event_loop()");
+		if (!translator) {
+			d("no translator set");
+			dpop();
+			return;
+		}
 		SDL_Event e;
 		for (;;) {
 			SDL_WaitEvent(&e);
@@ -151,8 +120,8 @@ namespace tgui{
 			switch (e.type) {
 				case SDL_KEYDOWN:
 				case SDL_KEYUP: {
-					if (exclusivekeyboard.id > 1) {
-						reaction |= call_grab_callback(exclusivekeyboard, &e);
+					if (exclusivekeyboard) {
+						reaction |= exclusivekeyboard(&e);
 						handled = true;
 					}
 					else {
@@ -167,7 +136,7 @@ namespace tgui{
 							d("found bind");
 							d("key "<<e.key.keysym.sym<<":"<<e.key.keysym.mod<<" grabbed");
 							for (CBMap::iterator ju=it.first; ju!=it.second; ++ju) {
-								reaction |= call_grab_callback(ju->second, &e);
+								reaction |= ju->second.cb(&e);
 							}
 							handled = true;
 						}
@@ -182,21 +151,21 @@ namespace tgui{
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP: {
 					d("something mousey happened");
-					if (exclusivemouse.id > 0) {
+					if (exclusivemouse) {
 						d("exclusive lock")
-						reaction |= call_grab_callback(exclusivemouse, &e);
+						reaction |= exclusivemouse(&e);
 						handled = true;
 					}
 					break;
 				}
 			}
-			if (!handled && default_handler.id > 1) {
+			if (!handled && default_handler) {
 				d("not handled, colling default handler");
-				reaction = call_grab_callback(default_handler, &e);
+				reaction = default_handler(&e);
 				handled = true;
 			}
 
-			if (handled && translator->translate(reaction)) {
+			if (handled && translator(reaction)) {
 				dpop();
 				return;
 			}
@@ -214,6 +183,7 @@ namespace tgui{
 		return false;
 	}
 	
+	/*
 	EventReaction EventArbiter::call_grab_callback(KeyboardCallback gcb, SDL_Event *e) {
 		dpush("EventArbiter::call_grab_callback");
 		EventReaction reaction;
@@ -228,5 +198,6 @@ namespace tgui{
 		dpop();
 		return reaction;
 	}
+	*/
 
 }	

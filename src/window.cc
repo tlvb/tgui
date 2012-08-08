@@ -8,8 +8,10 @@ namespace tgui {
 		bounds.nm.y = 0;
 		bounds.nm.w = c->w;
 		bounds.nm.h = c->h;
-		set_reaction_translator(this);
-		set_default_event_handler(this);
+		//set_reaction_translator(this);
+		set_reaction_translator(std::bind(&Window::translate, this, std::placeholders::_1));
+//		set_default_event_handler(this);
+		set_default_event_handler(std::bind(&Window::handle_event, this, std::placeholders::_1));
 	}
 
 
