@@ -9,16 +9,80 @@ namespace tgui {
 		clickcb = std::function<EventReaction(Uint8)>();
 		buttonstate = 0;
 		pressedhere = 0;
-		hover = false;
-		press = false;
+		mhover = false;
+		mpress = false;
+		kpress = false;
 	}
 
 	EventReaction ButtonBase::handle_event(SDL_Event *e) {
 		EventReaction reaction = 0;
-		bool oldhover = hover;
-		bool oldpress = press;
-		d("begin bs: "<<(unsigned int)buttonstate);
+		bool oldkpress = kpress;
+		bool oldmhover = mhover;
+		bool oldmpress = mpress;
 		switch (e->type) {
+			case SDL_KEYDOWN:
+				kpress = true;
+				if (presscb)
+					reaction |= presscb(0);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				buttonstate |= SDL_BUTTON(e->button.button);
+				pressedhere |= SDL_BUTTON(e->button.button);
+				if (presscb)
+					reaction |= presscb(SDL_BUTTON(e->button.button));
+				break;
+			case SDL_KEYUP:
+				kpress = false;
+				if (releasecb)
+					reaction |= releasecb(0);
+				if (clickcb)
+					reaction |= clickcb(0);
+			case SDL_MOUSEBUTTONUP:
+				if (releasecb)
+					reaction |= releasecb(SDL_BUTTON(e->button.button));
+				if (((pressedhere & SDL_BUTTON(e->button.button)) != 0) && clickcb)
+					reaction |= clickcb(SDL_BUTTON(e->button.button));
+				buttonstate &= ~SDL_BUTTON(e->button.button);
+				pressedhere &= ~SDL_BUTTON(e->button.button);
+				break;
+			case SDL_USEREVENT: {
+					MouseState *m = (MouseState*)e->user.data1;
+					switch (e->user.code) {
+						case mouseenter:
+							mhover = true;
+							if (m->b != 0) {
+								if (presscb)
+									reaction |= presscb(m->b);
+								buttonstate = m->b;
+								pressedhere = 0;
+							}
+							break;
+						case mouseexit:
+							mhover = false;
+							if (buttonstate != 0) {
+								if (releasecb)
+									reaction |= releasecb(buttonstate);
+								buttonstate = 0;
+								pressedhere = 0;
+							}
+							break;
+					}
+			}
+		}
+		mpress = buttonstate != 0;
+		if (mhover != oldmhover || mpress != oldmpress || kpress != oldkpress) {
+			draw();
+			reaction |= UPDATE_SCREEN;
+		}
+		return reaction;
+	}
+/*
+	EventReaction ButtonBase::handle_event(SDL_Event *e) {
+		EventReaction reaction = 0;
+		bool oldmhover = mhover;
+		bool oldmpress = mpress;
+		switch (e->type) {
+			case SDL_KEYDOWN:
 			case SDL_MOUSEBUTTONDOWN:
 				buttonstate |= SDL_BUTTON(e->button.button);
 				pressedhere |= SDL_BUTTON(e->button.button);
@@ -27,6 +91,7 @@ namespace tgui {
 				}
 				break;
 			case SDL_MOUSEBUTTONUP:
+			case SDL_KEYUP:
 				if (releasecb) {
 					reaction |= releasecb(SDL_BUTTON(e->button.button));
 				}
@@ -40,7 +105,7 @@ namespace tgui {
 					MouseState *m = (MouseState*)e->user.data1;
 					switch (e->user.code) {
 						case mouseenter:
-							hover = true;
+							mhover = true;
 							if (m->b != 0) {
 								if (presscb) {
 									reaction |= presscb(m->b);
@@ -50,7 +115,7 @@ namespace tgui {
 							}
 							break;
 						case mouseexit:
-							hover = false;
+							mhover = false;
 							if (buttonstate != 0) {
 								if (releasecb) {
 									reaction |= releasecb(buttonstate);
@@ -62,16 +127,14 @@ namespace tgui {
 					}
 			}
 		}
-		press = buttonstate != 0;
-		d("end bs: "<<(unsigned int)buttonstate);
-		d("press "<<oldpress<<"->"<<press);
-		if (hover != oldhover || press != oldpress) {
+		mpress = buttonstate != 0;
+		if (mhover != oldmhover || mpress != oldmpress) {
 			draw();
 			reaction |= UPDATE_SCREEN;
 		}
 		return reaction;
 	}
-
+*/
 
 	void ButtonBase::register_callback(std::function<EventReaction(Uint8)> cb, MouseAction action) {
 		switch (action) {
@@ -102,15 +165,13 @@ namespace tgui {
 	}
 
 	void LabelButton::draw(void) {
-		dpush("LabelButton::draw()");
 		if (canvas != NULL && bounds.nm.w > 0 && bounds.nm.h > 0 ) {
 			if (theme != NULL) {
 			}
 			else {
-				d("null theme");
 				fill_rect(canvas, &bounds.nm, default_bg);
 				empty_semirect(canvas, &bounds.nm, default_fg);
-				if (hover) {
+				if (mhover || kpress) {
 					if (bounds.nm.w >= 4 && bounds.nm.h >= 4) {
 						SDL_Rect r = {
 							.x = (Sint16) (bounds.nm.x + 2),
@@ -118,7 +179,7 @@ namespace tgui {
 							.w = (Uint16) (bounds.nm.w - 4),
 							.h = (Uint16) (bounds.nm.h - 4)
 						};
-						if (press) {
+						if (mpress || kpress) {
 							if (bounds.nm.w >= 8 && bounds.nm.h >= 8) {
 								r.x += 2;
 								r.y += 2;
@@ -131,9 +192,7 @@ namespace tgui {
 				}
 			}
 		}
-		d("drawing child (label)");
 		label.draw();
-		dpop();
 	}
 
 

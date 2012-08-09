@@ -12,13 +12,14 @@ namespace tgui {
 
 	class ButtonBase : public SContainer {
 		protected:
-			Uint8 buttonstate;
-			Uint8 pressedhere;
 			std::function<EventReaction(Uint8)>	presscb;
 			std::function<EventReaction(Uint8)>	releasecb;
 			std::function<EventReaction(Uint8)> clickcb;
-			bool hover;
-			bool press;
+			bool mhover;
+			bool mpress;
+			bool kpress;
+			Uint8 buttonstate;
+			Uint8 pressedhere;
 			
 		public:
 			ButtonBase(void);
