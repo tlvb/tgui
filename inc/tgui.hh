@@ -10,5 +10,6 @@
 #include "examplewidget.hh"
 #include "label.hh"
 #include "button.hh"
+#include "slider.hh"
 
 #endif

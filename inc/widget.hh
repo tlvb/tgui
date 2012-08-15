@@ -25,6 +25,7 @@ namespace tgui {
 		public:
 			static void set_defaults(Uint32 bg, Uint32 fg, TTF_Font *font);
 			Widget(void);
+			virtual ~Widget(void) {};
 			bool has_parent(void) const;
 			void set_parent(Container *pc);
 			virtual void set_canvas(SDL_Surface *c);

@@ -19,13 +19,15 @@ namespace tgui {
 	const Gravity center = 1;
 	const Gravity right = 2;
 	const Gravity bottom = 2;
+	const Gravity expand = 4;
 
 	struct Theme {
 		int foo;
 	};
 
 	typedef unsigned int EventReaction;
-	typedef unsigned long long GrabID;
+	typedef unsigned int GrabID;
+	typedef unsigned int GrabContext; 
 
 	class EventConsumer {
 		public:
@@ -41,11 +43,6 @@ namespace tgui {
 	struct MouseState {
 		Uint16 x, y;
 		Uint8 b;
-	};
-
-	struct KeyboardCallback {
-		GrabID id;
-		EventCallback cb;
 	};
 
 	union Rect {

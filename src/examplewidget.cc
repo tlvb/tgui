@@ -6,7 +6,7 @@
 namespace tgui {
 
 	ExampleWidget::ExampleWidget(void) {
-		shape.nm = {0, 0, 0, 0, 0, 0};
+		shape.nm = {0, 0, 1000, 1000, expand, expand};
 		hasMouse = false;
 	}
 
@@ -20,7 +20,7 @@ namespace tgui {
 	}
 
 	void ExampleWidget::draw() {
-		dpush("ExampleWidget::draw()");
+//		dpush("ExampleWidget::draw()");
 		if ((canvas != NULL) && (bounds.nm.w > 0) && (bounds.nm.h > 0)) {
 			if (theme != NULL) {
 #if 0
@@ -47,27 +47,27 @@ namespace tgui {
 						vertical_line(canvas, x, bounds.nm.y, bounds.nm.y+bounds.nm.h-1, default_fg);
 					}
 				}
-				d("draw done");
+//				d("draw done");
 			}
 		}
-		dpop();
+//		dpop();
 	}
 
 
 	EventReaction ExampleWidget::handle_event(SDL_Event *e) {
-		dpush("ExampleWidget::handle_event()");
+	//	dpush("ExampleWidget::handle_event()");
 		switch (e->type) {
 			case SDL_USEREVENT:
 				switch (e->user.code) {
 					case mouseenter:
-						d("mouseenter");
+//						d("mouseenter");
 						hasMouse = true;
 						draw();
 						dpop();
 						return UPDATE_SCREEN;
 						break;
 					case mouseexit:
-						d("mouseexit");
+//						d("mouseexit");
 						hasMouse = false;
 						draw();
 						dpop();

@@ -47,6 +47,7 @@ namespace tgui {
 	void Widget::place(SDL_Rect *b, bool doDraw) {
 		dpush("Widget::place()");
 		bounds = *b;
+		d("bounds are "<<bounds.nm.x<<";"<<bounds.nm.y<<" "<<bounds.nm.w<<"x"<<bounds.nm.h);
 		if (doDraw && (canvas != NULL)) {
 			draw();
 		}

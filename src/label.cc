@@ -31,7 +31,9 @@ namespace tgui {
 			}
 			d(bounds.nm.x<<";"<<bounds.nm.y<<" "<<bounds.nm.w<<"x"<<bounds.nm.h);
 			SDL_Rect boundscopy = bounds.nm;
-			SDL_BlitSurface(ts, &r, canvas, &boundscopy);
+			if (ts != NULL) {
+				SDL_BlitSurface(ts, &r, canvas, &boundscopy);
+			}
 		}
 		else {
 			d("null canvas");
@@ -67,12 +69,19 @@ namespace tgui {
 			};
 			ts = TTF_RenderText_Blended(default_font, txt.c_str(), tc);
 		}
-		shape.nm.minw = ts->w;
-		shape.nm.minh = ts->h;
-		shape.nm.maxw = ts->w;
-		shape.nm.maxh = ts->h;
-		shape.nm.hgrav = left;
-		shape.nm.vgrav = center;
+		if (ts != NULL) {
+			shape.nm.minw = ts->w;
+			shape.nm.minh = ts->h;
+			shape.nm.maxw = ts->w;
+			shape.nm.maxh = ts->h;
+		}
+		else {
+			shape.nm.minw = 0;
+			shape.nm.minh = 0;
+			shape.nm.maxw = 0;
+			shape.nm.maxh = 0;
+		}
+				
 		if (parent != NULL) {
 			parent->configure();
 		}

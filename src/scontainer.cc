@@ -4,8 +4,8 @@
 namespace tgui {
 
 	SContainer::SContainer(void) {
-		pad[0] = 2;
-		pad[1] = 2;
+		pad[0] = 5;
+		pad[1] = 5;
 		child = ChildInfo(NULL);
 	}
 
@@ -36,6 +36,7 @@ namespace tgui {
 		c->set_parent(this);
 		c->set_canvas(canvas);
 		configure();
+		dpop();
 		return true;
 	}
 
@@ -65,10 +66,8 @@ namespace tgui {
 		shape = *child.shp;
 		shape.nm.minw += pad[0]*2;
 		shape.nm.minh += pad[1]*2;
-		if (shape.nm.maxw != 0)
-			shape.nm.maxw += pad[0]*2;
-		if (shape.nm.maxh != 0)
-			shape.nm.maxh += pad[1]*2;
+		shape.nm.maxw += pad[0]*2;
+		shape.nm.maxh += pad[1]*2;
 		if (parent == NULL) {
 			d("no parent");
 			dpop();
@@ -125,16 +124,14 @@ namespace tgui {
 		for (int i=0; i<2; ++i) {
 			dpush("dimension "<<(i==0?'x':'y'));
 			d("available: "<<csz[i]);
-			if ((child.shp->ix.max[i] > 0) && (child.shp->ix.max[i] < csz[i])) {
+			if ((child.shp->ix.grav[i] != expand) && (child.shp->ix.max[i] < csz[i])) {
 				child.bounds.ix.sz[i] = child.shp->ix.max[i];
 				switch (child.shp->ix.grav[i]) {
-					case 0:
+					case 0: // left/top
 						child.bounds.ix.pos[i] = 0;
-						d("left/top "<<child.bounds.ix.pos[i]);
 						break;
-					case 1:
+					case 1: // center
 						child.bounds.ix.pos[i] = (csz[i]-child.bounds.ix.sz[i])/2;
-						d("center "<<child.bounds.ix.pos[i]);
 						break;
 					case 2:
 						child.bounds.ix.pos[i] = csz[i]-child.bounds.ix.sz[i];

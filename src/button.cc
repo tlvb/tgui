@@ -14,6 +14,24 @@ namespace tgui {
 		kpress = false;
 	}
 
+	EventReaction ButtonBase::handle_press(Uint8 button) {
+		if (presscb)
+			return presscb(button);
+		return 0;
+	}
+
+	EventReaction ButtonBase::handle_release(Uint8 button) {
+		if (releasecb)
+			return releasecb(button);
+		return 0;
+	}
+
+	EventReaction ButtonBase::handle_click(Uint8 button) {
+		if (clickcb)
+			return clickcb(button);
+		return 0;
+	}
+
 	EventReaction ButtonBase::handle_event(SDL_Event *e) {
 		EventReaction reaction = 0;
 		bool oldkpress = kpress;
@@ -22,26 +40,22 @@ namespace tgui {
 		switch (e->type) {
 			case SDL_KEYDOWN:
 				kpress = true;
-				if (presscb)
-					reaction |= presscb(0);
+				reaction |= handle_press(0);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				buttonstate |= SDL_BUTTON(e->button.button);
 				pressedhere |= SDL_BUTTON(e->button.button);
-				if (presscb)
-					reaction |= presscb(SDL_BUTTON(e->button.button));
+				reaction |= handle_press(SDL_BUTTON(e->button.button));
 				break;
 			case SDL_KEYUP:
 				kpress = false;
-				if (releasecb)
-					reaction |= releasecb(0);
-				if (clickcb)
-					reaction |= clickcb(0);
+				reaction |= handle_release(0);
+				reaction |= handle_click(0);
+				break;
 			case SDL_MOUSEBUTTONUP:
-				if (releasecb)
-					reaction |= releasecb(SDL_BUTTON(e->button.button));
-				if (((pressedhere & SDL_BUTTON(e->button.button)) != 0) && clickcb)
-					reaction |= clickcb(SDL_BUTTON(e->button.button));
+				reaction |= handle_release(SDL_BUTTON(e->button.button));
+				if ((pressedhere & SDL_BUTTON(e->button.button)) != 0)
+					reaction |= handle_click(SDL_BUTTON(e->button.button));
 				buttonstate &= ~SDL_BUTTON(e->button.button);
 				pressedhere &= ~SDL_BUTTON(e->button.button);
 				break;
@@ -51,8 +65,7 @@ namespace tgui {
 						case mouseenter:
 							mhover = true;
 							if (m->b != 0) {
-								if (presscb)
-									reaction |= presscb(m->b);
+								reaction |= handle_press(m->b);
 								buttonstate = m->b;
 								pressedhere = 0;
 							}
@@ -60,8 +73,7 @@ namespace tgui {
 						case mouseexit:
 							mhover = false;
 							if (buttonstate != 0) {
-								if (releasecb)
-									reaction |= releasecb(buttonstate);
+								reaction |= handle_release(buttonstate);
 								buttonstate = 0;
 								pressedhere = 0;
 							}
@@ -76,65 +88,6 @@ namespace tgui {
 		}
 		return reaction;
 	}
-/*
-	EventReaction ButtonBase::handle_event(SDL_Event *e) {
-		EventReaction reaction = 0;
-		bool oldmhover = mhover;
-		bool oldmpress = mpress;
-		switch (e->type) {
-			case SDL_KEYDOWN:
-			case SDL_MOUSEBUTTONDOWN:
-				buttonstate |= SDL_BUTTON(e->button.button);
-				pressedhere |= SDL_BUTTON(e->button.button);
-				if (presscb) {
-					reaction |= presscb(SDL_BUTTON(e->button.button));
-				}
-				break;
-			case SDL_MOUSEBUTTONUP:
-			case SDL_KEYUP:
-				if (releasecb) {
-					reaction |= releasecb(SDL_BUTTON(e->button.button));
-				}
-				if (((pressedhere & SDL_BUTTON(e->button.button)) != 0) && clickcb) {
-					reaction |= clickcb(SDL_BUTTON(e->button.button));
-				}
-				buttonstate &= ~SDL_BUTTON(e->button.button);
-				pressedhere &= ~SDL_BUTTON(e->button.button);
-				break;
-			case SDL_USEREVENT: {
-					MouseState *m = (MouseState*)e->user.data1;
-					switch (e->user.code) {
-						case mouseenter:
-							mhover = true;
-							if (m->b != 0) {
-								if (presscb) {
-									reaction |= presscb(m->b);
-								}
-								buttonstate = m->b;
-								pressedhere = 0;
-							}
-							break;
-						case mouseexit:
-							mhover = false;
-							if (buttonstate != 0) {
-								if (releasecb) {
-									reaction |= releasecb(buttonstate);
-								}
-								buttonstate = 0;
-								pressedhere = 0;
-							}
-							break;
-					}
-			}
-		}
-		mpress = buttonstate != 0;
-		if (mhover != oldmhover || mpress != oldmpress) {
-			draw();
-			reaction |= UPDATE_SCREEN;
-		}
-		return reaction;
-	}
-*/
 
 	void ButtonBase::register_callback(std::function<EventReaction(Uint8)> cb, MouseAction action) {
 		switch (action) {
@@ -155,16 +108,17 @@ namespace tgui {
 	}
 
 
-	LabelButton::LabelButton(std::string text) : label(Label(text)) {
+	Button::Button(std::string text) : label(Label(text)) {
 		set_padding(20,10);
-		dpush("LabelButton::LabelButton()");
+		dpush("Button::Button()");
 		attach_child(&label);
 		const Shape *sp = child.w->get_preferred_shape();
 		d(sp->nm.minw << "-" << sp->nm.maxw << " x " << sp->nm.minh << "-" << sp->nm.maxh);
 		dpop();
 	}
 
-	void LabelButton::draw(void) {
+	void Button::draw(void) {
+		dpush("Button::draw()");
 		if (canvas != NULL && bounds.nm.w > 0 && bounds.nm.h > 0 ) {
 			if (theme != NULL) {
 			}
@@ -193,12 +147,42 @@ namespace tgui {
 			}
 		}
 		label.draw();
+		dpop();
 	}
 
 
-	void LabelButton::set_text(std::string text) {
+	void Button::set_text(std::string text) {
 		configure();
 	}
 
+	ToggleButton::ToggleButton(std::string text) : Button(text) {
+		state = false;
+	}
+
+	void ToggleButton::draw(void) {
+		dpush("ToggleButton::draw()");
+		Button::draw();
+		if (canvas != NULL && bounds.nm.w > 0 && bounds.nm.h > 0 ) {
+			if (theme != NULL) {
+			}
+			else {
+				if(state) {
+					fill_antisemirect(canvas, &bounds.nm, default_fg);
+				}
+				else {
+					empty_rect(canvas, &bounds.nm, default_fg);
+				}
+			}
+		}
+		d("/TB::draw()");
+		dpop();
+	}
+
+	EventReaction ToggleButton::handle_click(Uint8 button) {
+		EventReaction reaction = Button::handle_click(button);
+		reaction |= UPDATE_SCREEN;
+		state = !state;
+		return reaction;
+	}
 
 }

@@ -5,13 +5,13 @@
 #include <iostream>
 #include <string>
 
-namespace tGui {
+namespace tgui {
 	extern int debug_indentlevel;
 }
 
-#define dpush(x) d(x); ++tGui::debug_indentlevel
-#define d(x) std::cerr << std::string(tGui::debug_indentlevel*4, ' ') << x << std::endl;
-#define dpop() --tGui::debug_indentlevel;
+#define dpush(x) d(x); ++tgui::debug_indentlevel
+#define d(x) std::cerr << std::string(tgui::debug_indentlevel*4, ' ') << x << std::endl;
+#define dpop() tgui::debug_indentlevel = tgui::debug_indentlevel>0?tgui::debug_indentlevel-1:0;
 
 #else
 #define dpush(x) {}

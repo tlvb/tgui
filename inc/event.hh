@@ -5,6 +5,9 @@
 #include <utility>
 #include <SDL/SDL.h>
 #include "base.hh"
+#include <vector>
+
+#define TGUI_EVENTARBITER_NMB 16
 
 namespace tgui {
 
@@ -14,9 +17,6 @@ namespace tgui {
 	// eventarbiter.cc
 	class EventArbiter {
 
-		public:
-
-
 		private:
 
 			class KeysymComparator {
@@ -24,14 +24,24 @@ namespace tgui {
 					bool operator()(const SDL_keysym &a, const SDL_keysym &b) const;
 			};
 
-			typedef std::multimap<SDL_keysym, KeyboardCallback, KeysymComparator> CBMap;
-			typedef std::map<int,CBMap> CBMapMap;
-			CBMapMap binds;
-			CBMapMap::iterator curBindIter;
-			CBMapMap::iterator defBindIter;
+			struct EventCallbackEntry {
+				GrabID id;
+				EventCallback cb;
+			};
 
-			GrabID gid;
-			int grabContext;
+			typedef std::multimap<SDL_keysym, EventCallbackEntry, KeysymComparator> KCBMap;
+			typedef std::map<int,KCBMap> KCBMapMap;
+
+
+			KCBMapMap kbinds;
+			KCBMapMap::iterator curKBindIter;
+			KCBMapMap::iterator defKBindIter;
+
+			std::vector<EventCallback> mbinds;
+
+			GrabID nextGID;
+			GrabContext currentContext;
+			GrabContext nextContext;
 
 			ReactionTranslator translator;
 			EventCallback default_handler;
@@ -39,18 +49,24 @@ namespace tgui {
 			EventCallback exclusivemouse;
 
 		public:
-			const GrabID invalidGrabID = 0;
+			const GrabID invalidGID = 0;
+			const GrabContext invalidContext = 0;
+			const GrabContext defaultContext = 1;
+
 			EventArbiter();
 
 			void set_reaction_translator(ReactionTranslator t);
 			void set_default_event_handler(EventCallback ec);
 
-			bool add_grab_context(int context);
-			bool set_grab_context(int context);
+			GrabContext add_grab_context(void);
+			bool set_grab_context(GrabContext gc);
 
-			GrabID grab_key(SDL_keysym s, EventCallback ec);
-			GrabID grab_key(SDL_keysym s, int context, EventCallback ec);
+			GrabID grab_key(SDLKey sym, SDLMod mod, EventCallback ec);
+			GrabID grab_key(SDLKey sym, SDLMod mod, GrabContext gc, EventCallback ec);
 			bool ungrab_key(GrabID id);
+			
+			bool grab_button(int button, EventCallback ec);
+			bool ungrab_button(int button);
 
 			void grab_keyboard_exclusive(EventCallback ec);
 			void ungrab_keyboard_exclusive(void);
@@ -62,8 +78,7 @@ namespace tgui {
 
 		protected:
 			bool update_iterators(int newContext);
-			GrabID grab_key(SDL_keysym s, int context, KeyboardCallback kcb);
-//			EventReaction call_grab_callback(KeyboardCallback gcb, SDL_Event *e);
+			GrabID grab_key(SDL_keysym s, GrabContext gc, EventCallbackEntry kcb);
 	};
 
 

@@ -1,5 +1,5 @@
 #ifdef DEBUG
-namespace tGui {
+namespace tgui {
 	int debug_indentlevel = 0;
 }
 #endif

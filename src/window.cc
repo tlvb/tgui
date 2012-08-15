@@ -17,10 +17,10 @@ namespace tgui {
 
 	bool Window::translate(EventReaction r) {
 		if ((r & UPDATE_SCREEN) != 0) {
-			dpush("Window::translate r="<<r);
-			d("FLIP");
+//			dpush("Window::translate r="<<r);
+//			d("FLIP");
 			SDL_Flip(canvas);
-			dpop();
+//			dpop();
 		}
 		if ((r & QUIT) != 0) {
 			dpush("Window::translate r="<<r);
@@ -43,7 +43,7 @@ namespace tgui {
 		int csz[2] = {canvas->w, canvas->h};
 
 		for (int i=0; i<2; ++i) {
-			if ((child.shp->ix.max[i] > 0) && (child.shp->ix.max[i] < csz[i])) {
+			if ((child.shp->ix.grav[i] != expand) && (child.shp->ix.max[i] < csz[i])) {
 				child.bounds.ix.sz[i] = child.shp->ix.max[i];
 				switch (child.shp->ix.grav[i]) {
 					case 0:
@@ -58,6 +58,7 @@ namespace tgui {
 				}
 			}
 			else {
+				child.bounds.ix.pos[i] = 0;
 				child.bounds.ix.sz[i] = csz[i];
 			}
 		}

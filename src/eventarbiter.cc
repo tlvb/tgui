@@ -5,13 +5,16 @@ namespace tgui{
 
 	EventArbiter::EventArbiter() {
 		dpush("EventArbiter::EventArbiter()");
-		add_grab_context(0);
-		set_grab_context(0);
+		nextContext = invalidContext + 1;
+		currentContext = add_grab_context();
+		update_iterators(defaultContext);
+		set_grab_context(defaultContext);
 		translator = ReactionTranslator();
 		default_handler = EventCallback();
 		exclusivekeyboard = EventCallback();
 		exclusivemouse = EventCallback();
-		gid = invalidGrabID + 1;
+		nextGID = invalidGID + 1;
+		mbinds = std::vector<EventCallback>(TGUI_EVENTARBITER_NMB);
 		dpop();
 	}
 
@@ -30,38 +33,50 @@ namespace tgui{
 		default_handler = ec;
 	}
 
-	bool EventArbiter::add_grab_context(int context) {
-		dpush("EventArbiter::add_grab_context("<<context<<")");
-		std::pair<CBMapMap::iterator, bool> ret;
-		ret = binds.insert(std::pair<int, CBMap>(context, CBMap()));
+	GrabContext EventArbiter::add_grab_context(void) {
+		dpush("EventArbiter::add_grab_context()");
+		GrabContext gc = nextContext++;
+		std::pair<KCBMapMap::iterator, bool> ret;
+		ret = kbinds.insert(std::pair<int, KCBMap>(gc, KCBMap()));
 		d("insert returned "<<ret.second);
-		update_iterators(grabContext);
+		update_iterators(currentContext);
 		dpop();
-		return ret.second;
+		if (ret.second) {
+			return gc;
+		}
+		else {
+			return invalidContext;
+		}
 	}
 
-	bool EventArbiter::set_grab_context(int context) {
-		return update_iterators(context);
+	bool EventArbiter::set_grab_context(GrabContext gc) {
+		return update_iterators(gc);
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, EventCallback ec) {
-		return grab_key(s, grabContext, ec);
+	GrabID EventArbiter::grab_key(SDLKey sym, SDLMod mod, EventCallback ec) {
+		return grab_key(sym, mod, currentContext, ec);
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, int context, EventCallback ec) {
-		KeyboardCallback kcb = {
-			.id = gid++,
+	GrabID EventArbiter::grab_key(SDLKey sym, SDLMod mod, GrabContext gc, EventCallback ec) {
+		SDL_keysym key = {
+			.scancode = 0,
+			.sym = sym,
+			.mod = mod,
+			.unicode = 0
+		};
+		EventCallbackEntry kcb = {
+			.id = nextGID++,
 			.cb = ec
 		};
-		return grab_key(s, context, kcb);
+		return grab_key(key, gc, kcb);
 	}
 
 	bool EventArbiter::ungrab_key(GrabID id) {
-		for(CBMapMap::iterator outer=binds.begin(); outer!=binds.end(); ++outer) {
-			for (CBMap::iterator inner=outer->second.begin(); inner!=outer->second.end(); ++inner) {
+		for(KCBMapMap::iterator outer=kbinds.begin(); outer!=kbinds.end(); ++outer) {
+			for (KCBMap::iterator inner=outer->second.begin(); inner!=outer->second.end(); ++inner) {
 				if (inner->second.id == id) {
 					outer->second.erase(inner);
-					update_iterators(grabContext);
+					update_iterators(currentContext);
 					return true;
 				}
 			}
@@ -69,6 +84,26 @@ namespace tgui{
 		return false;
 	}
 
+
+	bool EventArbiter::grab_button(int button, EventCallback ec) {
+		if (button <= TGUI_EVENTARBITER_NMB) {
+			if (mbinds[button-1] == NULL) {
+				mbinds[button-1] = ec;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool EventArbiter::ungrab_button(int button) {
+		if (button <= TGUI_EVENTARBITER_NMB) {
+			if (!mbinds[button-1]) {
+				mbinds[button-1] = EventCallback();
+				return true;
+			}
+		}
+		return false;
+	}
 
 	void EventArbiter::grab_keyboard_exclusive(EventCallback ec) {
 		exclusivekeyboard = ec;
@@ -87,21 +122,21 @@ namespace tgui{
 		exclusivemouse = EventCallback();
 	}
 
-	GrabID EventArbiter::grab_key(SDL_keysym s, int context, KeyboardCallback kcb) {
+	GrabID EventArbiter::grab_key(SDL_keysym s, GrabContext gc, EventCallbackEntry kcb) {
 		dpush("EventArbiter::grab_key (protected)");
-		CBMapMap::iterator it = binds.find(context);
+		KCBMapMap::iterator it = kbinds.find(gc);
 
-		if (it != binds.end()) {
+		if (it != kbinds.end()) {
 			d("found context");
-			CBMap::iterator ret;
-			ret = it->second.insert(std::pair<SDL_keysym, KeyboardCallback>(s, kcb));
+			KCBMap::iterator ret;
+			ret = it->second.insert(std::pair<SDL_keysym, EventCallbackEntry>(s, kcb));
 			dpop();
 			return kcb.id;
 		}
 		else {
 			d("did not find context");
 			dpop();
-			return invalidGrabID;
+			return invalidGID;
 		}
 	}
 
@@ -125,42 +160,54 @@ namespace tgui{
 						handled = true;
 					}
 					else {
-						std::pair<CBMap::iterator,CBMap::iterator> it = curBindIter->second.equal_range(e.key.keysym);
+						std::pair<KCBMap::iterator,KCBMap::iterator> it = curKBindIter->second.equal_range(e.key.keysym);
 						bool found = (it.first != it.second);
 						if (!found) {
-//							d("did not find bind, searching defaults");
-							it = defBindIter->second.equal_range(e.key.keysym);
+							d("did not find bind, searching defaults");
+							it = defKBindIter->second.equal_range(e.key.keysym);
 							found = (it.first != it.second);
 						}
 						if (found) {
 							d("found bind");
 							d("key "<<e.key.keysym.sym<<":"<<e.key.keysym.mod<<" grabbed");
-							for (CBMap::iterator ju=it.first; ju!=it.second; ++ju) {
+							for (KCBMap::iterator ju=it.first; ju!=it.second; ++ju) {
 								reaction |= ju->second.cb(&e);
 							}
 							handled = true;
 						}
 						else {
-//							d("did not find bind");
-//							d("key "<<e.key.keysym.sym<<":"<<e.key.keysym.mod<<" not grabbed");
+							d("did not find bind");
+							d("key "<<e.key.keysym.sym<<":"<<e.key.keysym.mod<<" not grabbed");
 						}
 					}
 					break;
 				}
 				case SDL_MOUSEMOTION:
-				case SDL_MOUSEBUTTONDOWN:
-				case SDL_MOUSEBUTTONUP: {
-//					d("something mousey happened");
 					if (exclusivemouse) {
 						d("exclusive lock")
 						reaction |= exclusivemouse(&e);
 						handled = true;
 					}
 					break;
+				case SDL_MOUSEBUTTONDOWN:
+				case SDL_MOUSEBUTTONUP: {
+					d("something mousey happened");
+					if (exclusivemouse) {
+						d("exclusive lock")
+						reaction |= exclusivemouse(&e);
+						handled = true;
+					}
+					else if (e.button.button <= TGUI_EVENTARBITER_NMB) {
+						if (mbinds[e.button.button-1]) {
+							reaction |= mbinds[e.button.button-1](&e);
+							handled = true;
+						}
+					}
+					break;
 				}
 			}
 			if (!handled && default_handler) {
-//				d("not handled, calling default handler");
+				d("not handled, calling default handler");
 				reaction = default_handler(&e);
 				handled = true;
 			}
@@ -173,31 +220,14 @@ namespace tgui{
 	}
 
 	bool EventArbiter::update_iterators(int newContext) {
-		defBindIter = binds.find(0);
-		CBMapMap::iterator tmpi = binds.find(newContext);
-		if (tmpi != binds.end()) {
-			grabContext = newContext;
-			curBindIter = tmpi;
+		defKBindIter = kbinds.find(defaultContext);
+		KCBMapMap::iterator tmpi = kbinds.find(newContext);
+		if (tmpi != kbinds.end()) {
+			currentContext = newContext;
+			curKBindIter = tmpi;
 			return true;
 		}
 		return false;
 	}
 	
-	/*
-	EventReaction EventArbiter::call_grab_callback(KeyboardCallback gcb, SDL_Event *e) {
-		dpush("EventArbiter::call_grab_callback");
-		EventReaction reaction;
-		if((gcb.id & 1) == 0) {
-			d("is a consumer object");
-			reaction = gcb.consumer.ec->handle_event(e);
-		}
-		else {
-			d("is a function pointer");
-			reaction = gcb.func.f(e, gcb.func.data);
-		}
-		dpop();
-		return reaction;
-	}
-	*/
-
 }	
