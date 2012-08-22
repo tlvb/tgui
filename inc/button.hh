@@ -5,7 +5,7 @@
 #include <utility>
 #include "container.hh"
 #include <functional>
-#include <label.hh>
+#include "label.hh"
 #include "base.hh"
 
 namespace tgui {

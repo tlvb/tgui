@@ -6,7 +6,8 @@ use warnings;
 my $HDIR = 'inc/';
 my $SDIR = 'src/';
 my $LDIR = 'lib/';
-my $CPPFLAGS = '-std=c++11 -Wall -g -DDEBUG -Iinc/';
+#my $CPPFLAGS = '-std=c++11 -Wall -g -DDEBUG -Iinc/';
+my $CPPFLAGS = '-std=c++11 -Wall -g -Iinc/';
 my $CPP = 'g++';
 
 my %DEPS = ();

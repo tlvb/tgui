@@ -30,6 +30,7 @@ namespace tgui {
 			void set_parent(Container *pc);
 			virtual void set_canvas(SDL_Surface *c);
 			void set_preferred_shape(Shape *sh, bool doConfigure=true);
+			void set_gravity(Gravity vg, Gravity hg, bool doConfigure=true);
 			const Shape *get_preferred_shape(void) const;
 			virtual void place(SDL_Rect *b, bool doDraw=true);
 			virtual void draw(void) = 0;

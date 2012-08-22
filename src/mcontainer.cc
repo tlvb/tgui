@@ -17,11 +17,11 @@ namespace tgui {
 		}
 	}
 
-	void MContainer::set_padding(int hpadding, int vpadding, int chspacing) {
+	void MContainer::set_padding(int hpadding, int vpadding, int chspacing, bool doConfigure) {
 		pad[0] = hpadding;
 		pad[1] = vpadding;
 		chsp = chspacing;
-		if (parent != NULL) {
+		if (parent != NULL && doConfigure) {
 			parent->configure();
 		}
 	}
@@ -60,7 +60,7 @@ namespace tgui {
 		return true;
 	}
 
-	Widget *MContainer::remove_child(int pos) {
+	Widget *MContainer::remove_child(int pos, bool doConfigure) {
 		dpush("MContainer::remove_child()");
 		ChildIterator cit = children.begin()+pos;
 		Widget *w = NULL;
@@ -69,6 +69,8 @@ namespace tgui {
 			children.erase(cit);
 			w->set_parent(NULL);
 			w->set_canvas(NULL);
+			if (doConfigure)
+				configure();
 		}
 		else {
 			d("no child with index" << pos);
@@ -100,8 +102,6 @@ namespace tgui {
 
 		shape.ix.min[sec] = cit->shp->ix.min[sec];
 		shape.ix.min[pri] = cit->shp->ix.min[pri];
-		shape.ix.grav[pri] = cit->shp->ix.grav[pri];
-		shape.ix.grav[sec] = cit->shp->ix.grav[sec];
 
 		++cit;
 		for (;cit<children.end(); ++cit) {
@@ -117,10 +117,10 @@ namespace tgui {
 				d("children have more than one type of gravity (pri)");
 				shape.ix.grav[pri] = expand;
 			}
-			if (shape.ix.grav[sec] != cit->shp->ix.grav[sec]) {
-				d("children have more than one type of gravity (sec)");
-				shape.ix.grav[sec] = expand;
-			}
+   // 		if (shape.ix.grav[sec] != cit->shp->ix.grav[sec]) {
+   // 			d("children have more than one type of gravity (sec)");
+   // 			shape.ix.grav[sec] = expand;
+   // 		}
 
 			shape.ix.min[pri] += cit->shp->ix.min[pri];
 			d("yielding child space requirements of "<<shape.nm.minw<<"x"<<shape.nm.minh);
@@ -165,9 +165,7 @@ namespace tgui {
 			case SDL_USEREVENT:
 				switch (e->user.code) {
 					case mouseenter:
-						for (ChildIterator it=children.begin(); it<children.end(); ++it) {
-							handle_event((SDL_Event*)e->user.data1); // recursing instead of doing a whole new select
-						}
+						handle_event((SDL_Event*)e->user.data1); // recursing instead of doing a whole new select
 						break;
 					case mouseexit:
 						for (ChildIterator it=children.begin(); it<children.end(); ++it) {

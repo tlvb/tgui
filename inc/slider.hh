@@ -9,17 +9,18 @@
 		class BaseSlider : public Widget {
 
 			protected:
-				std::function<EventReaction(int)> changecb;
+				std::function<EventReaction(int, int)> changecb;
 				int pri, sec;
 				EventArbiter *arbiter;
 				int min, max, value, delta;
+				int movoffs;
 				bool vertical;
 				bool mhover;
 				Uint8 grabbing;
 
 			public:
 				BaseSlider(bool vertical, Uint16 length, int min, int max, int delta=1);
-				virtual void register_callback(std::function<EventReaction(int)> cb);
+				virtual void register_callback(std::function<EventReaction(int, int)> cb);
 				virtual void unregister_callback(void);
 				virtual void set_eventarbiter(EventArbiter *ea);
 

@@ -9,10 +9,10 @@ namespace tgui {
 		child = ChildInfo(NULL);
 	}
 
-	void SContainer::set_padding(int hpadding, int vpadding) {
+	void SContainer::set_padding(int hpadding, int vpadding, bool doConfigure) {
 		pad[0] = hpadding;
 		pad[1] = vpadding;
-		if (parent != NULL) {
+		if (parent != NULL && doConfigure) {
 			parent->configure();
 		}
 	}
@@ -43,6 +43,11 @@ namespace tgui {
 	Widget *SContainer::remove_child(void) {
 		Widget *w = child.w;
 		child.w = NULL;
+		w->set_parent(NULL);
+		w->set_canvas(NULL);
+		if (parent != NULL) {
+			parent->configure();
+		}
 		return w;
 	}
 

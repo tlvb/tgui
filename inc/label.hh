@@ -18,9 +18,9 @@ namespace tgui {
 		public:
 			Label(std::string text);
 			virtual void draw(void);
-			virtual void set_text(std::string text);
+			virtual void set_text(std::string text, bool doConfigure=true);
 		protected:
-			void render_text(void);
+			void render_text(bool doConfigure);
 	};
 
 }

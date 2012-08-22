@@ -39,6 +39,14 @@ namespace tgui {
 			parent->configure();
 		}
 	}
+	
+	void Widget::set_gravity(Gravity hg, Gravity vg, bool doConfigure) {
+		shape.nm.hgrav = hg;
+		shape.nm.vgrav = vg;
+		if (doConfigure && (parent != NULL)) {
+			parent->configure();
+		}
+	}
 
 	const Shape *Widget::get_preferred_shape(void) const {
 		return &shape;

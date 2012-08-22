@@ -16,14 +16,16 @@ namespace tgui {
 		this->max = max;
 		this->delta = delta;
 		this->vertical = vertical;
-		value = min + 0.3*(max-min);
+		value = min;
 		mhover = false;
 		grabbing = false;
 
-		shape.ix.min[pri] = length+4;
-		shape.ix.min[sec] = 16;
-		shape.ix.max[pri] = length+4;
-		shape.ix.max[sec] = 16;
+		shape.ix.min[pri] = length+14;
+		shape.ix.min[sec] = 20;
+		shape.ix.max[pri] = length+14;
+		shape.ix.max[sec] = 20;
+		shape.ix.grav[pri] = 0;
+		shape.ix.grav[sec] = center;
 
 		arbiter = NULL;
 	}
@@ -36,20 +38,22 @@ namespace tgui {
 			else {
 				fill_rect(canvas, &bounds.nm, default_bg);
 				empty_rect(canvas, &bounds.nm, default_fg);
-				int barpos = value2pos(value);
+				Sint16 barpos = value2pos(value);
 				if (mhover) {
-					if(vertical) {
-						if (barpos > bounds.nm.y)
-							horizontal_line(canvas, bounds.nm.x, barpos-1, bounds.nm.x+bounds.nm.w-1, default_fg);
-						if (barpos < bounds.nm.y+bounds.nm.h-1)
-							horizontal_line(canvas, bounds.nm.x, barpos+1, bounds.nm.x+bounds.nm.w-1, default_fg);
-					}
-					else {
-						vertical_line(canvas, barpos, bounds.nm.y, bounds.nm.y+bounds.nm.h-1, default_fg);
+					if (vertical) {
+						horizontal_line(canvas, bounds.nm.x+6, barpos-2, bounds.nm.x+bounds.nm.w-7, default_fg);
+						horizontal_line(canvas, bounds.nm.x+4, barpos, bounds.nm.x+bounds.nm.w-5, default_fg);
+						horizontal_line(canvas, bounds.nm.x+6, barpos+2, bounds.nm.x+bounds.nm.w-7, default_fg);
 					}
 				}
 				if(vertical) {
-					horizontal_line(canvas, bounds.nm.x, barpos, bounds.nm.x+bounds.nm.w-1, default_fg);
+					SDL_Rect knobr = {
+						.x = (Sint16)(bounds.nm.x+2),
+						.y = (Sint16)(barpos-4),
+						.w = (Uint16)(bounds.nm.w-4),
+						.h = 9
+					};
+					empty_rect(canvas, &knobr, default_fg);
 				}
 				else {
 					vertical_line(canvas, barpos, bounds.nm.y, bounds.nm.y+bounds.nm.h-1, default_fg);
@@ -71,7 +75,15 @@ namespace tgui {
 					case SDL_BUTTON_RIGHT:
 						// absolute positioning
 						value = pos2value(pos[pri]);
+						movoffs = 0;
+						if (arbiter != NULL && grabbing == 0) {
+							grabbing = e->button.button;
+							arbiter->grab_mouse_exclusive(std::bind(&Widget::handle_event, this, std::placeholders::_1));
+						}
+						break;
 					case SDL_BUTTON_LEFT:
+						// relative positioning
+						movoffs = value2pos(value) - pos[pri];
 						if (arbiter != NULL && grabbing == 0) {
 							grabbing = e->button.button;
 							arbiter->grab_mouse_exclusive(std::bind(&Widget::handle_event, this, std::placeholders::_1));
@@ -81,11 +93,13 @@ namespace tgui {
 				break;
 			}
 			case SDL_MOUSEBUTTONUP: {
+				Uint16 pos[2] = {e->button.x, e->button.y};
 				switch (e->button.button) {
 					case SDL_BUTTON_LEFT:
 					case SDL_BUTTON_RIGHT:
 						if (arbiter != NULL && grabbing == e->button.button) {
 							grabbing = 0;
+							movoffs = 0;
 							arbiter->ungrab_mouse_exclusive();
 							if (e->button.x < bounds.nm.x || e->button.x >= bounds.nm.x + bounds.nm.w ||
 									e->button.y < bounds.nm.y || e->button.y >= bounds.nm.y + bounds.nm.h) {
@@ -97,17 +111,19 @@ namespace tgui {
 						break;
 					case SDL_BUTTON_WHEELUP:
 						value += delta;
+						movoffs = value2pos(value) - pos[pri];
 						break;
 					case SDL_BUTTON_WHEELDOWN:
 						value -= delta;
+						movoffs = value2pos(value) - pos[pri];
 						break;
 				}
 				break;
 			}
 			case SDL_MOUSEMOTION: {
 				if (grabbing) {
-					Sint16 relpos[2] = {e->motion.xrel, e->motion.yrel};
-					value = pos2value(value2pos(value)+relpos[pri]);
+					Uint16 pos[2] = {e->motion.x, e->motion.y};
+					value = pos2value(pos[pri] + movoffs);
 				}
 				break;
 			}
@@ -132,6 +148,8 @@ namespace tgui {
 			value = value>min?value:min;
 			value = value<max?value:max;
 			draw();
+			if (changecb)
+				reaction |= changecb(oldvalue, value);
 			reaction |= UPDATE_SCREEN;
 		}
 
@@ -139,7 +157,8 @@ namespace tgui {
 		return reaction;
 	}
 
-	void BaseSlider::register_callback(std::function<EventReaction(int)> cb) {
+	void BaseSlider::register_callback(std::function<EventReaction(int, int)> cb) {
+		changecb = cb;
 	}
 
 	void BaseSlider::set_eventarbiter(EventArbiter *ea) {
@@ -147,15 +166,20 @@ namespace tgui {
 	}
 
 	void BaseSlider::unregister_callback(void) {
+		changecb = std::function<EventReaction(int, int)>();
 	}
 
 	int BaseSlider::pos2value(int pos) {
-		return (((bounds.ix.pos[pri]+2+bounds.ix.sz[pri]-1-4)-pos)*(max-min))/(bounds.ix.sz[pri]-1-4);
+		int value = min + (max-min)*((bounds.ix.sz[pri]-13)-(pos-(bounds.ix.pos[pri]+6)))/(bounds.ix.sz[pri]-13);
+
+		return value;
 	}
 
 	int BaseSlider::value2pos(int value) {
-		return bounds.ix.pos[pri]+2+bounds.ix.sz[pri]-1-4 - (value*(bounds.ix.sz[pri]-1-4))/(max-min);
+		int pos = bounds.ix.pos[pri]+6 + (bounds.ix.sz[pri]-13)*((max-min)-(value-min))/(max-min);
+		return pos;
 	}
+
 
 
 

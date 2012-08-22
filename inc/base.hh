@@ -79,7 +79,7 @@ namespace tgui {
 		bool hasMouse;
 	};
 
-	const int sr_bevel = 12;
+	const int sr_bevel = 6;
 	void horizontal_line(SDL_Surface *s, int x0, int y, int x1, Uint32 c);
 	void vertical_line(SDL_Surface *s, int x, int y0, int y1, Uint32 c);
 	void line(SDL_Surface *s, int x0, int y0, int x1, int y1, Uint32 c);

@@ -109,11 +109,9 @@ namespace tgui {
 
 
 	Button::Button(std::string text) : label(Label(text)) {
-		set_padding(20,10);
+		set_padding(8,8);
 		dpush("Button::Button()");
 		attach_child(&label);
-		const Shape *sp = child.w->get_preferred_shape();
-		d(sp->nm.minw << "-" << sp->nm.maxw << " x " << sp->nm.minh << "-" << sp->nm.maxh);
 		dpop();
 	}
 

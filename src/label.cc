@@ -9,7 +9,7 @@ namespace tgui {
 		ts = NULL;
 		txt = text;
 		font = NULL;
-		render_text();
+		render_text(false);
 	}
 
 	void Label::draw(void) {
@@ -41,12 +41,12 @@ namespace tgui {
 		dpop();
 	}
 
-	void Label::set_text(std::string text) {
+	void Label::set_text(std::string text, bool doConfigure) {
 		txt = text;
-		render_text();
+		render_text(doConfigure);
 	}
 
-	void Label::render_text(void) {
+	void Label::render_text(bool doConfigure) {
 		dpush("Label::render_text()");
 		if (ts != NULL) {
 			SDL_FreeSurface(ts);
@@ -82,11 +82,8 @@ namespace tgui {
 			shape.nm.maxh = 0;
 		}
 				
-		if (parent != NULL) {
+		if (parent != NULL && doConfigure) {
 			parent->configure();
-		}
-		else {
-			d("null parent");
 		}
 		dpop();
 	}
