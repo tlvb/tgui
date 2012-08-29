@@ -3,6 +3,7 @@
 #include <SDL/SDL.h>
 #include <functional>
 
+
 namespace tgui {
 
 	typedef Uint8 MouseAction;
@@ -12,6 +13,8 @@ namespace tgui {
 	const MouseAction mouseclick = 3;
 	const MouseAction mouseenter = 4;
 	const MouseAction mouseexit = 5;
+
+	const Uint8 void_void_callback = 6;
 
 	typedef Uint8 Gravity;
 	const Gravity left = 0;

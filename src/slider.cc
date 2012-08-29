@@ -20,9 +20,9 @@ namespace tgui {
 		mhover = false;
 		grabbing = false;
 
-		shape.ix.min[pri] = length+14;
+		shape.ix.min[pri] = length+13;
 		shape.ix.min[sec] = 20;
-		shape.ix.max[pri] = length+14;
+		shape.ix.max[pri] = length+13;
 		shape.ix.max[sec] = 20;
 		shape.ix.grav[pri] = 0;
 		shape.ix.grav[sec] = center;
@@ -124,6 +124,7 @@ namespace tgui {
 				if (grabbing) {
 					Uint16 pos[2] = {e->motion.x, e->motion.y};
 					value = pos2value(pos[pri] + movoffs);
+					reaction |= UPDATE_SCREEN;
 				}
 				break;
 			}
@@ -170,17 +171,14 @@ namespace tgui {
 	}
 
 	int BaseSlider::pos2value(int pos) {
-		int value = min + (max-min)*((bounds.ix.sz[pri]-13)-(pos-(bounds.ix.pos[pri]+6)))/(bounds.ix.sz[pri]-13);
+		int value = min + ((max-min)*((bounds.ix.sz[pri]-13)-(pos-(bounds.ix.pos[pri]+6)))+((bounds.ix.sz[pri]-13)/2))/(bounds.ix.sz[pri]-13);
 
 		return value;
 	}
 
 	int BaseSlider::value2pos(int value) {
-		int pos = bounds.ix.pos[pri]+6 + (bounds.ix.sz[pri]-13)*((max-min)-(value-min))/(max-min);
+		int pos = bounds.ix.pos[pri]+6 + (((bounds.ix.sz[pri]-13)*((max-min)-(value-min))+(max-min)/2))/(max-min);
 		return pos;
 	}
-
-
-
 
 }

@@ -12,6 +12,14 @@ namespace tgui {
 		render_text(false);
 	}
 
+	Label::~Label(void) {
+		if (ts != NULL) {
+			SDL_FreeSurface(ts);
+			ts = NULL;
+		}
+	}
+
+
 	void Label::draw(void) {
 		dpush("Label::draw()");
 		if (canvas != NULL) {

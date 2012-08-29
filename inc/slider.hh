@@ -35,6 +35,18 @@
 
 		};
 
+		class VerticalSlider : public BaseSlider {
+			public:
+				VerticalSlider(Uint16 length, int min, int max, int delta=1) :
+					BaseSlider(true, length, min, max, delta) {}
+		};
+
+		class HorizontalSlider : public BaseSlider {
+			public:
+				HorizontalSlider(Uint16 length, int min, int max, int delta=1) :
+					BaseSlider(false, length, min, max, delta) {}
+		};
+
 	}
 
 #endif

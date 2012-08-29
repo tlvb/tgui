@@ -1,6 +1,8 @@
 #include "event.hh"
 #include "debug.hh"
 
+#include <iostream>
+
 namespace tgui{
 
 	EventArbiter::EventArbiter() {
@@ -204,6 +206,14 @@ namespace tgui{
 						}
 					}
 					break;
+				case SDL_USEREVENT:
+					if (e.user.code == void_void_callback) {
+						std::cout<<"[[EVENTARBITER VOID VOID CALLBACK RUNNER]]"<<std::endl;
+						(*((std::function<void(void)>*)(e.user.data1)))();
+						std::cout<<"[[EVENTARBITER VOID VOID CALLBACK RUNNER]] -- deleting functor"<<std::endl;
+						delete ((std::function<void(void)>*)(e.user.data1));
+						std::cout<<"[[EVENTARBITER VOID VOID CALLBACK RUNNER]] -- functor deleted"<<std::endl;
+					}
 				}
 			}
 			if (!handled && default_handler) {

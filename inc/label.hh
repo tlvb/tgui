@@ -17,6 +17,7 @@ namespace tgui {
 
 		public:
 			Label(std::string text);
+			virtual ~Label(void);
 			virtual void draw(void);
 			virtual void set_text(std::string text, bool doConfigure=true);
 		protected:
